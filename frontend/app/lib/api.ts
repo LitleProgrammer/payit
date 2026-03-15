@@ -7,8 +7,31 @@ export interface AuthResponse {
 
 const API_URL = "http://localhost:3000"; // your express server
 
+async function apiFetch(
+    path: string,
+    options: RequestInit = {}
+) {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(options.headers || {})
+        }
+    });
+
+    if (res.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+    }
+
+    return res;
+}
+
 export async function signup(username: string, password: string) {
-    const res = await fetch(`${API_URL}/signup`, {
+    const res = await fetch(`${API_URL}/users/signup`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -23,7 +46,7 @@ export async function signup(username: string, password: string) {
 }
 
 export async function login(username: string, password: string) {
-    const res = await fetch(`${API_URL}/login`, {
+    const res = await fetch(`${API_URL}/users/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

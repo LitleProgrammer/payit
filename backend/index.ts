@@ -1,5 +1,5 @@
 import express from "express";
-import { MongoClient } from "mongodb";
+import { connect, getDb } from "./db/mongoDB";
 import { UserRepository } from "./repositories/user.repository";
 import { AuthService } from "./services/auth.service";
 import { createUserRouter } from "./routes/user.routes";
@@ -12,15 +12,13 @@ app.use(cors({
     origin: "http://localhost:5173"
 }));
 
-const MONGO_URI = "mongodb://localhost:27017";
+const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017";
 const DB_NAME = "app";
 
 async function start() {
-
-    const client = new MongoClient(MONGO_URI);
-    await client.connect();
-
-    const db = client.db(DB_NAME);
+    console.log("Trying to connect to mongoDB on: ", MONGO_URL);
+    await connect(MONGO_URL);
+    const db = getDb();
 
     const userRepo = new UserRepository(db);
     const authService = new AuthService(userRepo);

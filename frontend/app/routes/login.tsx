@@ -1,35 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { login } from "../lib/api";
+import { login as loginRequest } from "../lib/api";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { GlassPanel } from "../components/ui/GlassPanel";
+import { useAuth } from "~/context/AuthContext";
+import { useRedirectIfAuthenticated } from "~/hooks/useRedirectIfAuthenticated";
 
 export default function Login() {
-
     const navigate = useNavigate();
+    const { login, isAuthenticated } = useAuth();
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate("/dashboard", { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         setError("");
 
-        const res = await login(username, password);
+        const res = await loginRequest(username, password);
 
         if (res.error) {
             setError(res.error);
             return;
         }
 
-        if (res.token) {
-            localStorage.setItem("token", res.token);
+        if (res.token && res.userId) {
+            login(res.token, res.userId);
+            navigate("/dashboard");
+            return;
         }
 
-        navigate("/");
+        navigate("/login");
     }
 
     return (
@@ -39,7 +49,7 @@ export default function Login() {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
 
-                    <h1 className="text-2xl font-semibold">
+                    <h1 className="text-3xl font-semibold text-center">
                         Login
                     </h1>
 
@@ -65,7 +75,7 @@ export default function Login() {
                     </Button>
 
                 </form>
-
+                <p className="text-sm mt-4">Noch keinen Account? <a href="/signup" className="text-blue-500 hover:underline">Registrieren</a></p>
             </GlassPanel>
 
         </div>

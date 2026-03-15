@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { useNavigate } from "react-router";
 import { signup } from "../lib/api";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { GlassPanel } from "../components/ui/GlassPanel";
+import { useRedirectIfAuthenticated } from "~/hooks/useRedirectIfAuthenticated";
 
 export default function Signup() {
+    useRedirectIfAuthenticated();
 
     const navigate = useNavigate();
 
@@ -35,8 +37,8 @@ export default function Signup() {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
 
-                    <h1 className="text-2xl font-semibold">
-                        Create Account
+                    <h1 className="text-3xl font-semibold text-center">
+                        Signup
                     </h1>
 
                     <Input
@@ -61,7 +63,7 @@ export default function Signup() {
                     </Button>
 
                 </form>
-
+                <p className="text-sm mt-4">Hast schon ein Account? <a href="/login" className="text-blue-500 hover:underline">Login</a></p>
             </GlassPanel>
 
         </div>
