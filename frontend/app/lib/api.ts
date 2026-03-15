@@ -5,7 +5,18 @@ export interface AuthResponse {
     error?: string
 }
 
-const API_URL = "http://localhost:3000"; // your express server
+export interface ApiResponse<T> {
+    message: string
+    error?: string
+    data?: T
+}
+
+export interface Contact {
+    _id: string
+    username: string
+}
+
+const API_URL = "http://192.168.2.194:3000"; // your express server
 
 async function apiFetch(
     path: string,
@@ -58,4 +69,22 @@ export async function login(username: string, password: string) {
     });
 
     return res.json() as Promise<AuthResponse>;
+}
+
+export async function createShadowUser(username: string) {
+    const res = await apiFetch("/shadows/create", {
+        method: "POST",
+        body: JSON.stringify({
+            username
+        })
+    });
+
+    return res.json() as Promise<ApiResponse<string>>;
+}
+
+export async function getShadowUsers() {
+    const res = await apiFetch("/shadows");
+    console.log(res);
+
+    return res.json() as Promise<ApiResponse<Contact[]>>;
 }
