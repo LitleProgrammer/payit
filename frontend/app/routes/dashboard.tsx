@@ -7,7 +7,7 @@ import { CurrencyInput } from '~/components/ui/CurrencyInput';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute'
-import { createShadowUser, getShadowUsers } from '~/lib/api';
+import { createShadowUser, getShadowUsers, createDebt } from '~/lib/api';
 
 export interface Contact {
     _id: string
@@ -15,6 +15,21 @@ export interface Contact {
 }
 
 type Currency = "EUR" | "USD" | "GBP" | "CHF";
+
+export interface Debt {
+    _id: string;
+    owner: string;
+    debtor: string;
+    amount: number;
+    currency: string;
+    createdAt: string;
+    description?: string;
+}
+
+export interface CreateDebtResponse {
+    debtId: string;
+    updatedDebts: Debt[];
+}
 
 export default function Dashboard() {
     const [selectUserModalOpen, setSelectUserModalOpen] = useState(false);
@@ -62,6 +77,46 @@ export default function Dashboard() {
         }
     }
 
+    async function handleCreateDebt() {
+        try {
+            // --- basic validation ---
+            if (!selectedUser || !debtAmount || !currency) {
+                console.error("Missing fields");
+                return;
+            }
+
+            if (isNaN(debtAmount) || debtAmount <= 0) {
+                console.error("Invalid amount");
+                return;
+            }
+
+            // --- API call ---
+            const res = await createDebt({
+                debtor: selectedUser,
+                amount: debtAmount,
+                currency,
+                description: debtDescription || undefined
+            });
+
+            if (res.error) {
+                console.error(res.error);
+                return;
+            }
+
+            if (res.data) {
+                //setDebts(res.data.updatedDebts);
+
+                // optional: reset form
+                setDebtAmount(null);
+                setDebtDescription("");
+                setSelectedUser(""); // only if you want to reset selection
+            }
+
+        } catch (err) {
+            console.error("Failed to create debt", err);
+        }
+    }
+
     return (
         <ProtectedRoute>
             <div className='w-full h-full flex flex-col items-center'>
@@ -89,7 +144,7 @@ export default function Dashboard() {
                     <ContactCard contact={contacts.find(c => c._id === selectedUser)!} selected label='Nutzer' onClick={() => { setCreateDebtModalOpen(false); setSelectUserModalOpen(true); }} />
                     <CurrencyInput label='Amount' value={debtAmount} onChange={setDebtAmount} currency={currency} onCurrencyChange={setCurrency} />
                     <Input label='Description' onChange={(e) => setDebtDescription(e.target.value)} />
-                    <Button onClick={() => setCreateDebtModalOpen(false)}>Erstellen</Button>
+                    <Button onClick={() => { setCreateDebtModalOpen(false); handleCreateDebt(); }}>Erstellen</Button>
                 </div>
             </Modal>
         </ProtectedRoute>

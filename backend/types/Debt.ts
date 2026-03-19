@@ -1,10 +1,11 @@
 export interface Debt {
-    id: string;
+    _id?: string;
     amount: number;
     description: string;
     createdAt: Date;
     debtor: string;
-    creditor: string;
+    owner: string;
+    currency: string;
     settled: boolean;
     settledAt?: Date;
 }

@@ -21,6 +21,23 @@ export interface CreateShadowUserResponse {
     updatedShadowUsers: Contact[];
 }
 
+export interface Debt {
+    _id?: string;
+    amount: number;
+    description: string;
+    createdAt: Date;
+    debtor: string;
+    owner: string;
+    currency: string;
+    settled: boolean;
+    settledAt?: Date;
+}
+
+export interface CreateDebtResponse {
+    debtId: string;
+    updatedDebts: Debt[];
+}
+
 const API_URL = "http://192.168.2.194:3000"; // your express server
 
 async function apiFetch(
@@ -92,4 +109,19 @@ export async function getShadowUsers() {
     console.log(res);
 
     return res.json() as Promise<ApiResponse<Contact[]>>;
+}
+
+
+export async function createDebt(data: {
+    debtor: string;
+    amount: number;
+    currency: string;
+    description?: string;
+}) {
+    const res = await apiFetch("/debts/create", {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    return res.json() as Promise<ApiResponse<CreateDebtResponse>>;
 }
