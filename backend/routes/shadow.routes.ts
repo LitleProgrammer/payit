@@ -25,9 +25,14 @@ export function createShadowRouter() {
                 owner,
             });
 
+            const shadowUsers = await userRepo.findShadowUsersByOwner(req.user!.userId);
+
             res.status(201).json({
                 message: "User created",
-                shadowUserId: shadowUser._id
+                data: {
+                    shadowUserId: shadowUser._id,
+                    updatedShadowUsers: shadowUsers
+                }
             });
 
         } catch (err: any) {

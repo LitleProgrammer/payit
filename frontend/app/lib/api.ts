@@ -16,6 +16,11 @@ export interface Contact {
     username: string
 }
 
+export interface CreateShadowUserResponse {
+    shadowUserId: string;
+    updatedShadowUsers: Contact[];
+}
+
 const API_URL = "http://192.168.2.194:3000"; // your express server
 
 async function apiFetch(
@@ -79,7 +84,7 @@ export async function createShadowUser(username: string) {
         })
     });
 
-    return res.json() as Promise<ApiResponse<string>>;
+    return res.json() as Promise<ApiResponse<CreateShadowUserResponse>>;
 }
 
 export async function getShadowUsers() {

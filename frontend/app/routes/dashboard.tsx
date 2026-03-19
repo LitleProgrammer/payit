@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Plus } from '~/components/icons/Plus';
 import { Button } from '~/components/ui/Button';
+import { ContactCard } from '~/components/ui/ContactCard';
 import { ContactSelect } from '~/components/ui/ContactSelect';
+import { CurrencyInput } from '~/components/ui/CurrencyInput';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute'
@@ -12,10 +14,19 @@ export interface Contact {
     username: string
 }
 
+type Currency = "EUR" | "USD" | "GBP" | "CHF";
+
 export default function Dashboard() {
     const [selectUserModalOpen, setSelectUserModalOpen] = useState(false);
+    const [createDebtModalOpen, setCreateDebtModalOpen] = useState(false);
+
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const [contacts, setContacts] = useState<Contact[]>([]);
+    const [shadowUserName, setShadowUserName] = useState<string | null>(null);
+
+    const [debtAmount, setDebtAmount] = useState<number | null>(null);
+    const [currency, setCurrency] = useState<Currency>("EUR");
+    const [debtDescription, setDebtDescription] = useState<string | null>(null);
 
     useEffect(() => {
         console.log("Whatb");
@@ -42,6 +53,15 @@ export default function Dashboard() {
         }
     }, [selectedUser]);
 
+    async function handleCreateShadowUser() {
+        if (shadowUserName) {
+            const createRes = await createShadowUser(shadowUserName);
+            if (createRes.data && createRes.data.updatedShadowUsers) {
+                setContacts(createRes.data.updatedShadowUsers);
+            }
+        }
+    }
+
     return (
         <ProtectedRoute>
             <div className='w-full h-full flex flex-col items-center'>
@@ -59,7 +79,17 @@ export default function Dashboard() {
             </div>
             <Modal open={selectUserModalOpen} onClose={() => setSelectUserModalOpen(false)}>
                 <div className='flex flex-col gap-4'>
-                    <ContactSelect contacts={contacts} onSelect={(user) => { setSelectedUser(user._id); setSelectUserModalOpen(false); }} />
+                    <ContactSelect contacts={contacts} onSelect={(user) => { setSelectedUser(user._id); setSelectUserModalOpen(false); setCreateDebtModalOpen(true); }} />
+                    <Input label='Neuer Nutzer' onChange={(e) => setShadowUserName(e.target.value)} />
+                    <Button onClick={handleCreateShadowUser}>Erstellen</Button>
+                </div>
+            </Modal>
+            <Modal open={createDebtModalOpen} onClose={() => setCreateDebtModalOpen(false)}>
+                <div className='flex flex-col gap-4'>
+                    <ContactCard contact={contacts.find(c => c._id === selectedUser)!} selected label='Nutzer' onClick={() => { setCreateDebtModalOpen(false); setSelectUserModalOpen(true); }} />
+                    <CurrencyInput label='Amount' value={debtAmount} onChange={setDebtAmount} currency={currency} onCurrencyChange={setCurrency} />
+                    <Input label='Description' onChange={(e) => setDebtDescription(e.target.value)} />
+                    <Button onClick={() => setCreateDebtModalOpen(false)}>Erstellen</Button>
                 </div>
             </Modal>
         </ProtectedRoute>

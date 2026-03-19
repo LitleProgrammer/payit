@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Avatar } from "./Avatar";
+import { ContactCard } from "./ContactCard";
 
 interface Contact {
     _id: string;
@@ -60,20 +60,11 @@ export function ContactSelect({ contacts = [], onSelect }: Props) {
                 "
             >
                 {filteredContacts.map((contact) => (
-                    <button
+                    <ContactCard
                         key={contact._id}
-                        onClick={() => onSelect(contact)}
-                        className="
-                        flex items-center gap-3
-                        px-4 py-2
-                        hover:bg-white/10
-                        transition
-                        text-left
-                        "
-                    >
-                        <Avatar username={contact.username} />
-                        <span className="text-white">{contact.username}</span>
-                    </button>
+                        contact={contact}
+                        onClick={onSelect}
+                    />
                 ))}
 
                 {filteredContacts.length === 0 && (
