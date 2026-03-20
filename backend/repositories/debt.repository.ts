@@ -22,4 +22,8 @@ export class DebtRepository {
     async findDebtsByOwner(owner: string): Promise<Debt[]> {
         return this.debts.find({ owner }).toArray();
     }
+
+    async findDebtsByUserID(owner: string, userID: string): Promise<Debt[]> {
+        return this.debts.find({ debtor: userID, owner }).toArray();
+    }
 }

@@ -25,7 +25,7 @@ export function createShadowRouter() {
                 owner,
             });
 
-            const shadowUsers = await userRepo.findShadowUsersByOwner(req.user!.userId);
+            const shadowUsers = await userRepo.findShadowUsersByOwnerId(req.user!.userId);
 
             res.status(201).json({
                 message: "User created",
@@ -46,11 +46,31 @@ export function createShadowRouter() {
 
     router.get("/", authenticateToken, async (req: AuthRequest, res) => {
         try {
-            const shadowUsers = await userRepo.findShadowUsersByOwner(req.user!.userId);
+            const shadowUsers = await userRepo.findShadowUsersByOwnerId(req.user!.userId);
 
             res.status(200).json({
                 message: "success",
                 data: shadowUsers
+            });
+
+        } catch (err: any) {
+
+            res.status(400).json({
+                error: err.message
+            });
+
+        }
+    });
+
+    router.get("/:shadowUserId", authenticateToken, async (req: AuthRequest & { params: { shadowUserId: string } }, res) => {
+        try {
+            const { shadowUserId } = req.params;
+
+            const shadowUser = await userRepo.findShadowUserById(shadowUserId);
+
+            res.status(200).json({
+                message: "success",
+                data: shadowUser
             });
 
         } catch (err: any) {

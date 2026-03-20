@@ -52,5 +52,33 @@ export function createDebtRouter(debtRepo: DebtRepository) {
         }
     });
 
+    router.get(
+        "/user/:id",
+        authenticateToken,
+        async (req: AuthRequest & { params: { id: string } }, res) => {
+            try {
+                const { id } = req.params;
+                const owner = req.user!.userId;
+
+                const debts = await debtRepo.findDebtsByUserID(owner, id);
+
+                if (!debts) {
+                    return res.status(404).json({
+                        error: "Debts not found",
+                    });
+                }
+
+                res.status(200).json({
+                    message: "Debts found",
+                    data: debts,
+                });
+            } catch (err: any) {
+                res.status(400).json({
+                    error: err.message,
+                });
+            }
+        }
+    );
+
     return router;
 }

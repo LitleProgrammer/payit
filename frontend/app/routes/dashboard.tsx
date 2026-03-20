@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Plus } from '~/components/icons/Plus';
 import { Button } from '~/components/ui/Button';
+import { ContactAvatarList } from '~/components/ui/ContactAvatarList';
 import { ContactCard } from '~/components/ui/ContactCard';
 import { ContactSelect } from '~/components/ui/ContactSelect';
 import { CurrencyInput } from '~/components/ui/CurrencyInput';
+import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute'
@@ -120,11 +122,13 @@ export default function Dashboard() {
     return (
         <ProtectedRoute>
             <div className='w-full h-full flex flex-col items-center'>
-                <div className='bg-cyan-200 h-1/12 w-full'>
-
-                </div>
-                <div className='-amber-600 h-10/12 w-full'>
-
+                <div className='-amber-600 h-11/12 w-full'>
+                    <div className='h-2/6 p-3'>
+                        <GlassPanel>
+                            <p className='text-right mb-1 hover:underline transition-all duration-700 hover:cursor-pointer'>Alle Kontakte →</p>
+                            <ContactAvatarList contacts={contacts.slice(0, 8)} />
+                        </GlassPanel>
+                    </div>
                 </div>
                 <div className='h-1/12 w-full flex flex-col justify-center items-center border-t-2 border-white/10 -fuchsia-600'>
                     <div className=''>
@@ -132,6 +136,9 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+
+
             <Modal open={selectUserModalOpen} onClose={() => setSelectUserModalOpen(false)}>
                 <div className='flex flex-col gap-4'>
                     <ContactSelect contacts={contacts} onSelect={(user) => { setSelectedUser(user._id); setSelectUserModalOpen(false); setCreateDebtModalOpen(true); }} />

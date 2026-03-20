@@ -106,9 +106,12 @@ export async function createShadowUser(username: string) {
 
 export async function getShadowUsers() {
     const res = await apiFetch("/shadows");
-    console.log(res);
-
     return res.json() as Promise<ApiResponse<Contact[]>>;
+}
+
+export async function getShadowUser(shadowUserId: string) {
+    const res = await apiFetch(`/shadows/${shadowUserId}`);
+    return res.json() as Promise<ApiResponse<Contact>>;
 }
 
 
@@ -124,4 +127,9 @@ export async function createDebt(data: {
     });
 
     return res.json() as Promise<ApiResponse<CreateDebtResponse>>;
+}
+
+export async function getUserDebts(userID: string) {
+    const res = await apiFetch(`/debts/user/${userID}`);
+    return res.json() as Promise<ApiResponse<Debt[]>>;
 }

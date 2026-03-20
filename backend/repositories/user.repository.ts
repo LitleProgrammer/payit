@@ -1,4 +1,4 @@
-import { Collection, Db } from "mongodb";
+import { Collection, Db, ObjectId } from "mongodb";
 import { User } from "../types/User";
 import { ShadowUser } from "../types/ShadowUser";
 
@@ -32,7 +32,11 @@ export class UserRepository {
         };
     }
 
-    async findShadowUsersByOwner(owner: string): Promise<ShadowUser[]> {
+    async findShadowUsersByOwnerId(owner: string): Promise<ShadowUser[]> {
         return this.shadowUsers.find({ owner }).toArray();
+    }
+
+    async findShadowUserById(shadowUserId: string): Promise<ShadowUser | null> {
+        return this.shadowUsers.findOne({ _id: new ObjectId(shadowUserId) });
     }
 }
