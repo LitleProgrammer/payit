@@ -1,23 +1,42 @@
-import { Collection, Db } from "mongodb";
+import { Collection, Db, ObjectId } from "mongodb";
 import { User } from "../types/User";
+import { ShadowUser } from "../types/ShadowUser";
 
 export class UserRepository {
 
-    private collection: Collection<User>;
+    private users: Collection<User>;
+    private shadowUsers: Collection<ShadowUser>;
 
     constructor(db: Db) {
-        this.collection = db.collection<User>("users");
+        this.users = db.collection<User>("users");
+        this.shadowUsers = db.collection<ShadowUser>("shadowUsers");
     }
 
     async findByUsername(username: string): Promise<User | null> {
-        return this.collection.findOne({ username });
+        return this.users.findOne({ username });
     }
 
     async createUser(user: User): Promise<User> {
-        const result = await this.collection.insertOne(user);
+        const result = await this.users.insertOne(user);
         return {
             ...user,
             _id: result.insertedId.toString()
         };
+    }
+
+    async createShadowUser(user: ShadowUser): Promise<ShadowUser> {
+        const result = await this.shadowUsers.insertOne(user);
+        return {
+            ...user,
+            _id: result.insertedId.toString()
+        };
+    }
+
+    async findShadowUsersByOwnerId(owner: string): Promise<ShadowUser[]> {
+        return this.shadowUsers.find({ owner }).toArray();
+    }
+
+    async findShadowUserById(shadowUserId: string): Promise<ShadowUser | null> {
+        return this.shadowUsers.findOne({ _id: new ObjectId(shadowUserId) });
     }
 }

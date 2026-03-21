@@ -2,7 +2,6 @@ import { Router } from "express";
 import { AuthService } from "../services/auth.service";
 
 export function createUserRouter(authService: AuthService) {
-
     const router = Router();
 
     router.post("/signup", async (req, res) => {
