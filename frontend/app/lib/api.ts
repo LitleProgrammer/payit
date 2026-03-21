@@ -38,7 +38,7 @@ export interface CreateDebtResponse {
     updatedDebts: Debt[];
 }
 
-const API_URL = "http://192.168.2.194:3000"; // your express server
+const API_URL = "http://localhost:3000"; // your express server
 
 async function apiFetch(
     path: string,

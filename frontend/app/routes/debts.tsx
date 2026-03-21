@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Avatar } from '~/components/ui/Avatar';
+import { Button } from '~/components/ui/Button';
+import { CurrencyInput } from '~/components/ui/CurrencyInput';
 import { GlassPanel } from '~/components/ui/GlassPanel';
+import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute';
 import { getUserDebts, getShadowUser } from '~/lib/api';
@@ -23,6 +26,8 @@ export interface Contact {
     username: string
 }
 
+type Currency = "EUR" | "USD" | "GBP" | "CHF";
+
 const debts = () => {
     const { userID } = useParams();
 
@@ -40,6 +45,7 @@ const debts = () => {
     const [user, setUser] = useState<Contact | null>(null);
     const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
     const [editDebtModalOpen, setEditDebtModalOpen] = useState(false);
+    const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
 
     const navigate = useNavigate();
 
@@ -123,10 +129,31 @@ const debts = () => {
                 </div>
             </div>
             <Modal open={editDebtModalOpen} onClose={() => setEditDebtModalOpen(false)}>
-                <p>{selectedDebt?.description}</p>
-                <p>{selectedDebt?.amount}{getCurrencySymbol(selectedDebt?.currency)}</p>
+                <h2 className='text-2xl font-bold py-2'>Bearbeiten</h2>
+                <Input label='Grund' value={selectedDebt?.description} />
+                <CurrencyInput
+                    label='Betrag'
+                    value={selectedDebt?.amount ?? null}
+                    onChange={() => { }}
+                    currency={(selectedDebt?.currency as Currency) ?? "EUR"}
+                    onCurrencyChange={() => { }}
+                />
+                <div className='w-full flex justify-center gap-x-4 mt-3'>
+                    <Button onClick={() => setEditDebtModalOpen(false)}>Speichern</Button>
+                    <Button onClick={() => { setEditDebtModalOpen(false); setDeleteConfirmModalOpen(true) }}>Löschen</Button>
+                </div>
             </Modal>
-        </ProtectedRoute>
+            <Modal open={deleteConfirmModalOpen} onClose={() => setDeleteConfirmModalOpen(false)}>
+                <h2 className='text-2xl font-bold py-2'>Löschen</h2>
+                <div className=''>
+                    <p>Wirklich löschen?</p>
+                    <div className='w-full flex justify-center gap-x-4 mt-3'>
+                        <Button onClick={() => setDeleteConfirmModalOpen(false)}>Ja</Button>
+                        <Button onClick={() => setDeleteConfirmModalOpen(false)}>Nein</Button>
+                    </div>
+                </div>
+            </Modal>
+        </ProtectedRoute >
     )
 }
 

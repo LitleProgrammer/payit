@@ -26,4 +26,20 @@ export class DebtRepository {
     async findDebtsByUserID(owner: string, userID: string): Promise<Debt[]> {
         return this.debts.find({ debtor: userID, owner }).toArray();
     }
+
+    async deleteDebt(debtID: string): Promise<boolean> {
+        await this.debts.deleteOne({ _id: debtID });
+
+        return true;
+    }
+
+    async updateDebt(debtID: string, updatedDebt: Partial<Debt>): Promise<Debt | null> {
+        const result = await this.debts.findOneAndUpdate(
+            { _id: debtID },
+            { $set: updatedDebt },
+            { returnDocument: "after" }
+        );
+
+        return result;
+    }
 }
