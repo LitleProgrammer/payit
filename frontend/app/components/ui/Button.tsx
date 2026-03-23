@@ -18,6 +18,7 @@ export const Button: React.FC<ButtonProps> = ({ children, ...props }) => {
         font-medium
         transition
         hover:bg-white/20
+        hover:cursor-pointer
         active:scale-[0.98]
       "
         >

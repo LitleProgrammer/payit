@@ -38,7 +38,7 @@ export interface CreateDebtResponse {
     updatedDebts: Debt[];
 }
 
-const API_URL = "http://192.168.2.194:3000"; // your express server
+const API_URL = "http://localhost:3000"; // your express server
 
 async function apiFetch(
     path: string,
@@ -131,5 +131,24 @@ export async function createDebt(data: {
 
 export async function getUserDebts(userID: string) {
     const res = await apiFetch(`/debts/user/${userID}`);
+    return res.json() as Promise<ApiResponse<Debt[]>>;
+}
+
+export async function editDebt(data: Debt) {
+    const res = await apiFetch(`/debts/edit/${data._id}`, {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    return res.json() as Promise<ApiResponse<Debt[]>>;
+}
+
+export async function deleteDebt(debtID: string) {
+    console.log("Deleting");
+
+    const res = await apiFetch(`/debts/delete/${debtID}`, {
+        method: "DELETE"
+    });
+
     return res.json() as Promise<ApiResponse<Debt[]>>;
 }
