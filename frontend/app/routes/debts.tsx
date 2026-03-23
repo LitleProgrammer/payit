@@ -7,7 +7,7 @@ import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute';
-import { getUserDebts, getShadowUser } from '~/lib/api';
+import { getUserDebts, getShadowUser, editDebt, deleteDebt } from '~/lib/api';
 
 export interface Debt {
     _id?: string;
@@ -92,6 +92,38 @@ const debts = () => {
         }
     }
 
+    async function handleEditDebt() {
+        if (selectedDebt) {
+            const res = await editDebt(selectedDebt);
+            if (res.data) {
+                setDebts(res.data);
+            }
+
+            setSelectedDebt(null);
+            setEditDebtModalOpen(false);
+        }
+    }
+
+    async function handleDeleteDebt() {
+        if (selectedDebt) {
+            console.log("Selected debt");
+
+            if (!selectedDebt._id) return;
+
+            console.log("Trying to delete debt");
+
+            const res = await deleteDebt(selectedDebt._id);
+            console.log("Deleted debt");
+
+            if (res.data) {
+                setDebts(res.data);
+            }
+
+            setSelectedDebt(null);
+            setDeleteConfirmModalOpen(false);
+        }
+    }
+
     return (
         <ProtectedRoute>
             <div className='p-3'>
@@ -124,22 +156,41 @@ const debts = () => {
                                     <p className='text-2xl text-red-500 ml-auto'>-{debt.amount}{getCurrencySymbol(debt.currency)}</p>
                                 </div>
                             ))}
+                            {debts.length === 0 && (
+                                <p className='text-center'>Keine Schulden gefunden.</p>
+                            )}
                         </div>
                     </GlassPanel>
                 </div>
             </div>
             <Modal open={editDebtModalOpen} onClose={() => setEditDebtModalOpen(false)}>
                 <h2 className='text-2xl font-bold py-2'>Bearbeiten</h2>
-                <Input label='Grund' value={selectedDebt?.description} />
+                <Input
+                    label='Grund'
+                    value={selectedDebt?.description ?? ""}
+                    onChange={(e) =>
+                        setSelectedDebt(prev =>
+                            prev ? { ...prev, description: e.target.value } : prev
+                        )
+                    }
+                />
                 <CurrencyInput
                     label='Betrag'
                     value={selectedDebt?.amount ?? null}
-                    onChange={() => { }}
+                    onChange={(value) =>
+                        setSelectedDebt(prev =>
+                            prev ? { ...prev, amount: value ?? 0 } : prev
+                        )
+                    }
                     currency={(selectedDebt?.currency as Currency) ?? "EUR"}
-                    onCurrencyChange={() => { }}
+                    onCurrencyChange={(currency) =>
+                        setSelectedDebt(prev =>
+                            prev ? { ...prev, currency } : prev
+                        )
+                    }
                 />
                 <div className='w-full flex justify-center gap-x-4 mt-3'>
-                    <Button onClick={() => setEditDebtModalOpen(false)}>Speichern</Button>
+                    <Button onClick={() => { handleEditDebt() }}>Speichern</Button>
                     <Button onClick={() => { setEditDebtModalOpen(false); setDeleteConfirmModalOpen(true) }}>Löschen</Button>
                 </div>
             </Modal>
@@ -148,7 +199,7 @@ const debts = () => {
                 <div className=''>
                     <p>Wirklich löschen?</p>
                     <div className='w-full flex justify-center gap-x-4 mt-3'>
-                        <Button onClick={() => setDeleteConfirmModalOpen(false)}>Ja</Button>
+                        <Button onClick={() => handleDeleteDebt()}>Ja</Button>
                         <Button onClick={() => setDeleteConfirmModalOpen(false)}>Nein</Button>
                     </div>
                 </div>

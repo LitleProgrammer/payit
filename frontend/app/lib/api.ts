@@ -133,3 +133,22 @@ export async function getUserDebts(userID: string) {
     const res = await apiFetch(`/debts/user/${userID}`);
     return res.json() as Promise<ApiResponse<Debt[]>>;
 }
+
+export async function editDebt(data: Debt) {
+    const res = await apiFetch(`/debts/edit/${data._id}`, {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    return res.json() as Promise<ApiResponse<Debt[]>>;
+}
+
+export async function deleteDebt(debtID: string) {
+    console.log("Deleting");
+
+    const res = await apiFetch(`/debts/delete/${debtID}`, {
+        method: "DELETE"
+    });
+
+    return res.json() as Promise<ApiResponse<Debt[]>>;
+}

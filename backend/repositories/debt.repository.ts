@@ -1,5 +1,5 @@
 // repositories/DebtRepository.ts
-import { Collection, Db } from "mongodb";
+import { Collection, Db, ObjectId } from "mongodb";
 import { Debt } from "../types/Debt";
 
 export class DebtRepository {
@@ -27,19 +27,21 @@ export class DebtRepository {
         return this.debts.find({ debtor: userID, owner }).toArray();
     }
 
-    async deleteDebt(debtID: string): Promise<boolean> {
-        await this.debts.deleteOne({ _id: debtID });
+    async deleteDebt(debtID: string, ownerID: string): Promise<Debt[]> {
+        await this.debts.deleteOne({ _id: new ObjectId(debtID!) });
 
-        return true;
+        const updated = await this.debts.find({ owner: ownerID }).toArray();
+        return updated;
     }
 
-    async updateDebt(debtID: string, updatedDebt: Partial<Debt>): Promise<Debt | null> {
-        const result = await this.debts.findOneAndUpdate(
-            { _id: debtID },
+    async updateDebt(debtID: string, updatedDebt: Partial<Debt>, ownerID: string): Promise<Debt[] | null> {
+        await this.debts.updateOne(
+            { _id: new ObjectId(debtID!) },
             { $set: updatedDebt },
-            { returnDocument: "after" }
         );
 
-        return result;
+        const updated = await this.debts.find({ owner: ownerID }).toArray();
+
+        return updated;
     }
 }

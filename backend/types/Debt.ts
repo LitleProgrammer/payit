@@ -1,5 +1,5 @@
 export interface Debt {
-    _id?: string;
+    _id?: string | ObjectId;
     amount: number;
     description: string;
     createdAt: Date;

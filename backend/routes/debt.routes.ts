@@ -98,13 +98,13 @@ export function createDebtRouter(debtRepo: DebtRepository) {
                 });
             }
 
-            const updatedDebt = await debtRepo.updateDebt(id, {
+            const updatedDebts = await debtRepo.updateDebt(id, {
                 amount,
                 currency,
                 description
-            });
+            }, owner);
 
-            if (!updatedDebt) {
+            if (!updatedDebts) {
                 return res.status(404).json({
                     error: "Debt not found",
                 });
@@ -112,7 +112,7 @@ export function createDebtRouter(debtRepo: DebtRepository) {
 
             res.status(200).json({
                 message: "Debt updated",
-                data: updatedDebt,
+                data: updatedDebts,
             });
         } catch (err: any) {
             res.status(400).json({
@@ -126,9 +126,12 @@ export function createDebtRouter(debtRepo: DebtRepository) {
             const { id } = req.params;
             const owner = req.user!.userId;
 
-            const deletedDebt = await debtRepo.deleteDebt(id);
+            console.log("Delete debt: ", id, owner);
 
-            if (!deletedDebt) {
+
+            const updatedDebts = await debtRepo.deleteDebt(id, owner);
+
+            if (!updatedDebts) {
                 return res.status(404).json({
                     error: "Debt not found",
                 });
@@ -136,7 +139,7 @@ export function createDebtRouter(debtRepo: DebtRepository) {
 
             res.status(200).json({
                 message: "Debt deleted",
-                data: {}
+                data: updatedDebts
             });
         } catch (err: any) {
             res.status(400).json({
