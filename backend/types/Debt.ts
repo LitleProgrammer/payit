@@ -1,3 +1,5 @@
+import { ObjectId } from "mongodb";
+
 export interface Debt {
     _id?: string | ObjectId;
     amount: number;
@@ -6,6 +8,4 @@ export interface Debt {
     debtor: string;
     owner: string;
     currency: string;
-    settled: boolean;
-    settledAt?: Date;
 }

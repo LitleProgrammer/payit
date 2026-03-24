@@ -29,13 +29,31 @@ export interface Debt {
     debtor: string;
     owner: string;
     currency: string;
-    settled: boolean;
-    settledAt?: Date;
+    paid: boolean;
+    remaining: number;
 }
 
 export interface CreateDebtResponse {
     debtId: string;
     updatedDebts: Debt[];
+}
+
+export interface BalanceResponse {
+    amountOwed: number;
+}
+
+export interface Payment {
+    _id?: string;
+    amount: number;
+    createdAt: Date;
+    currency: string;
+    from: string;
+    to: string;
+}
+
+export interface Allocation {
+    debtId: string;
+    amount: number;
 }
 
 const API_URL = "http://localhost:3000"; // your express server
@@ -144,11 +162,46 @@ export async function editDebt(data: Debt) {
 }
 
 export async function deleteDebt(debtID: string) {
-    console.log("Deleting");
-
     const res = await apiFetch(`/debts/delete/${debtID}`, {
         method: "DELETE"
     });
 
     return res.json() as Promise<ApiResponse<Debt[]>>;
 }
+
+export async function payAny(data: {
+    to: string;
+    amount: number;
+    currency: string;
+}) {
+    const res = await apiFetch("/payments/pay", {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    return res.json() as Promise<ApiResponse<{ allocations: Allocation[], payment: Payment, updatedDebts: Debt[] }>>;
+}
+
+export async function paySpecific(data: {
+    amount: number;
+    currency: string;
+}, debtID: string) {
+    const res = await apiFetch("/payments/pay/debt/" + debtID, {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    return res.json() as Promise<ApiResponse<{ payment: Payment, updatedDebts: Debt[] }>>;
+}
+
+export async function getAmountOwed(userID: string) {
+    const res = await apiFetch(`/debts/owedby/${userID}`);
+
+    return res.json() as Promise<ApiResponse<BalanceResponse>>;
+}
+
+/**
+ * Next steps: 
+ * check what is returned from backend and what is expected as return in frontend
+ * then check what is used wanted where the functions are used
+ */

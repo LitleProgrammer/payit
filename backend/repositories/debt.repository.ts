@@ -28,7 +28,7 @@ export class DebtRepository {
     }
 
     async deleteDebt(debtID: string, ownerID: string): Promise<Debt[]> {
-        await this.debts.deleteOne({ _id: new ObjectId(debtID!) });
+        await this.debts.deleteOne({ _id: new ObjectId(debtID!), owner: ownerID });
 
         const updated = await this.debts.find({ owner: ownerID }).toArray();
         return updated;
@@ -36,12 +36,27 @@ export class DebtRepository {
 
     async updateDebt(debtID: string, updatedDebt: Partial<Debt>, ownerID: string): Promise<Debt[] | null> {
         await this.debts.updateOne(
-            { _id: new ObjectId(debtID!) },
+            { _id: new ObjectId(debtID!), owner: ownerID },
             { $set: updatedDebt },
         );
 
         const updated = await this.debts.find({ owner: ownerID }).toArray();
 
         return updated;
+    }
+
+    async findDebtsBetweenUsers(owner: string, debtor: string): Promise<Debt[]> {
+        return await this.debts
+            .find({ owner, debtor })
+            .sort({ createdAt: 1 }) // oldest first
+            .toArray();
+    }
+
+    async findById(debtId: string): Promise<Debt | null> {
+        if (!ObjectId.isValid(debtId)) return null;
+
+        return this.debts.findOne({
+            _id: new ObjectId(debtId)
+        });
     }
 }

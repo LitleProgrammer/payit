@@ -3,11 +3,12 @@ import { useNavigate, useParams } from 'react-router'
 import { Avatar } from '~/components/ui/Avatar';
 import { Button } from '~/components/ui/Button';
 import { CurrencyInput } from '~/components/ui/CurrencyInput';
+import { Divider } from '~/components/ui/Divider';
 import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute';
-import { getUserDebts, getShadowUser, editDebt, deleteDebt } from '~/lib/api';
+import { getUserDebts, getShadowUser, editDebt, deleteDebt, payAny, paySpecific, getAmountOwed } from '~/lib/api';
 
 export interface Debt {
     _id?: string;
@@ -17,8 +18,8 @@ export interface Debt {
     debtor: string;
     owner: string;
     currency: string;
-    settled: boolean;
-    settledAt?: Date;
+    paid: boolean;
+    remaining: number;
 }
 
 export interface Contact {
@@ -43,9 +44,12 @@ const debts = () => {
 
     const [debts, setDebts] = useState<Debt[]>([]);
     const [user, setUser] = useState<Contact | null>(null);
+    const [owedAmount, setOwedAmount] = useState<number | null>(null);
     const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
     const [editDebtModalOpen, setEditDebtModalOpen] = useState(false);
     const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
+    const [subtractModalOpen, setSubtractModalOpen] = useState(false);
+    const [subtractAmount, setSubtractAmount] = useState<number | null>(null);
 
     const navigate = useNavigate();
 
@@ -55,14 +59,17 @@ const debts = () => {
         async function fetchData() {
             const debtsRes = await getUserDebts(id);
             if (debtsRes.data) {
-                console.log(debtsRes.data);
-
                 setDebts(debtsRes.data);
             }
 
             const userRes = await getShadowUser(id);
             if (userRes.data) {
                 setUser(userRes.data);
+            }
+
+            const owedRes = await getAmountOwed(id);
+            if (owedRes.data) {
+                setOwedAmount(owedRes.data.amountOwed);
             }
         }
 
@@ -106,14 +113,9 @@ const debts = () => {
 
     async function handleDeleteDebt() {
         if (selectedDebt) {
-            console.log("Selected debt");
-
             if (!selectedDebt._id) return;
 
-            console.log("Trying to delete debt");
-
             const res = await deleteDebt(selectedDebt._id);
-            console.log("Deleted debt");
 
             if (res.data) {
                 setDebts(res.data);
@@ -121,6 +123,41 @@ const debts = () => {
 
             setSelectedDebt(null);
             setDeleteConfirmModalOpen(false);
+        }
+    }
+
+    async function handleSubtract() {
+        if (subtractAmount) {
+            const res = await payAny({
+                to: id,
+                amount: subtractAmount,
+                currency: "EUR"
+            });
+
+            if (res.data) {
+                setDebts(res.data.updatedDebts);
+            }
+
+            setSelectedDebt(null);
+            setSubtractAmount(null);
+            setSubtractModalOpen(false);
+        }
+    }
+
+    async function handleSubtractSpecific() {
+        if (subtractAmount && selectedDebt && selectedDebt._id) {
+            const res = await paySpecific({
+                amount: subtractAmount,
+                currency: "EUR"
+            }, selectedDebt._id);
+
+            if (res.data) {
+                setDebts(res.data.updatedDebts);
+            }
+
+            setSelectedDebt(null);
+            setSubtractAmount(null);
+            setEditDebtModalOpen(false);
         }
     }
 
@@ -138,22 +175,27 @@ const debts = () => {
                                     <Avatar username={user.username} size={17} fontSize='text-2xl' />
                                     <p className='ml-4 text-2xl font-bold'>{user.username}</p>
                                 </div>
-                                <p className='text-2xl text-red-500 ml-auto'>-204,94€</p>
+                                <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount > 0 ? '#fc1303' : '#00c711' }}>{owedAmount !== null && owedAmount > 0 ? "-" : ""}{owedAmount}{getCurrencySymbol("EUR")}</p>
                             </div>
                         )}
                     </GlassPanel>
                 </div>
                 <div className='mt-3'>
-                    <h2 className='text-2xl font-bold py-2'>Schulden:</h2>
+                    <div className='flex justify-between mb-3'>
+                        <h2 className='text-2xl font-bold py-2'>Schulden:</h2>
+                        <Button onClick={() => setSubtractModalOpen(true)}>Abziehen</Button>
+                    </div>
                     <GlassPanel>
                         <div className='flex flex-col gap-4 divide-y divide-white/10'>
                             {debts.map((debt) => (
-                                <div key={debt._id} className='flex items-center w-full pb-4 transition-all duration-150 hover:cursor-pointer hover:scale-[1.005]' onClick={() => handleDebtClick(debt._id)}>
+                                <div key={debt._id} className='flex items-center justify-between w-full pb-4 transition-all duration-150 hover:cursor-pointer hover:scale-[1.005]' onClick={() => handleDebtClick(debt._id)}>
                                     <div className='flex flex-col items-start'>
                                         <p className='ml-4 text-md font-bold'>Grund: {debt.description}</p>
-                                        <p className='ml-4 text-md font-bold'>Bezahlt: {debt.settled ? "✅" : "❌"}</p>
                                     </div>
-                                    <p className='text-2xl text-red-500 ml-auto'>-{debt.amount}{getCurrencySymbol(debt.currency)}</p>
+                                    <div className='flex flex-row items-end'>
+                                        <p className='text-2xl ml-auto' style={{ color: debt.remaining > 0 ? '#fc1303' : '#00c711' }}>{debt.remaining > 0 ? "-" : ""}{debt.remaining}{getCurrencySymbol(debt.currency)}</p>
+                                        <p className='text-md text-red-500 ml-1' style={{ color: debt.remaining > 0 ? '#fc1303' : '#00c711' }}>({debt.amount}{getCurrencySymbol(debt.currency)})</p>
+                                    </div>
                                 </div>
                             ))}
                             {debts.length === 0 && (
@@ -189,7 +231,23 @@ const debts = () => {
                         )
                     }
                 />
-                <div className='w-full flex justify-center gap-x-4 mt-3'>
+                <Divider />
+                <div className='w-full flex justify-center items-end gap-x-4'>
+                    <CurrencyInput
+                        label='Abziehen'
+                        value={subtractAmount ?? null}
+                        onChange={(value) =>
+                            setSubtractAmount(value ?? 0)
+                        }
+                        currency="EUR"
+                        onCurrencyChange={() => { }}
+                    />
+                    <div>
+                        <Button onClick={() => { handleSubtractSpecific() }}>Abziehen</Button>
+                    </div>
+                </div>
+                <Divider />
+                <div className='w-full flex justify-center gap-x-4'>
                     <Button onClick={() => { handleEditDebt() }}>Speichern</Button>
                     <Button onClick={() => { setEditDebtModalOpen(false); setDeleteConfirmModalOpen(true) }}>Löschen</Button>
                 </div>
@@ -202,6 +260,19 @@ const debts = () => {
                         <Button onClick={() => handleDeleteDebt()}>Ja</Button>
                         <Button onClick={() => setDeleteConfirmModalOpen(false)}>Nein</Button>
                     </div>
+                </div>
+            </Modal>
+            <Modal open={subtractModalOpen} onClose={() => setSubtractModalOpen(false)}>
+                <h2 className='text-2xl font-bold py-2'>Abziehen</h2>
+                <CurrencyInput
+                    label='Betrag'
+                    value={subtractAmount}
+                    onChange={(value) => setSubtractAmount(value ?? 0)}
+                    onCurrencyChange={() => { }}
+                    currency="EUR"
+                />
+                <div className='w-full flex justify-center gap-x-4 mt-3'>
+                    <Button onClick={() => handleSubtract()}>Abziehen</Button>
                 </div>
             </Modal>
         </ProtectedRoute >

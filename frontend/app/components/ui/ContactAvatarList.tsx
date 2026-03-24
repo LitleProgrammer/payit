@@ -23,8 +23,6 @@ export function ContactAvatarList({
         if (onSelect) {
             onSelect(contact);
         } else {
-            console.log("Navigating");
-
             navigate(`/debts/${contact._id}`);
         }
     }
