@@ -3,11 +3,12 @@ import { useNavigate, useParams } from 'react-router'
 import { Avatar } from '~/components/ui/Avatar';
 import { Button } from '~/components/ui/Button';
 import { CurrencyInput } from '~/components/ui/CurrencyInput';
+import { Divider } from '~/components/ui/Divider';
 import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute';
-import { getUserDebts, getShadowUser, editDebt, deleteDebt, payAny, paySpecific } from '~/lib/api';
+import { getUserDebts, getShadowUser, editDebt, deleteDebt, payAny, paySpecific, getAmountOwed } from '~/lib/api';
 
 export interface Debt {
     _id?: string;
@@ -43,6 +44,7 @@ const debts = () => {
 
     const [debts, setDebts] = useState<Debt[]>([]);
     const [user, setUser] = useState<Contact | null>(null);
+    const [owedAmount, setOwedAmount] = useState<number | null>(null);
     const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
     const [editDebtModalOpen, setEditDebtModalOpen] = useState(false);
     const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
@@ -65,6 +67,13 @@ const debts = () => {
             const userRes = await getShadowUser(id);
             if (userRes.data) {
                 setUser(userRes.data);
+            }
+
+            const owedRes = await getAmountOwed(id);
+            console.log("owedRes: ", owedRes);
+
+            if (owedRes.data) {
+                setOwedAmount(owedRes.data.amountOwed);
             }
         }
 
@@ -139,6 +148,27 @@ const debts = () => {
 
                 setDebts(res.data.updatedDebts);
             }
+
+            setSelectedDebt(null);
+            setSubtractAmount(null);
+            setSubtractModalOpen(false);
+        }
+    }
+
+    async function handleSubtractSpecific() {
+        if (subtractAmount && selectedDebt && selectedDebt._id) {
+            const res = await paySpecific({
+                amount: subtractAmount,
+                currency: "EUR"
+            }, selectedDebt._id);
+
+            if (res.data) {
+                setDebts(res.data.updatedDebts);
+            }
+
+            setSelectedDebt(null);
+            setSubtractAmount(null);
+            setEditDebtModalOpen(false);
         }
     }
 
@@ -156,7 +186,7 @@ const debts = () => {
                                     <Avatar username={user.username} size={17} fontSize='text-2xl' />
                                     <p className='ml-4 text-2xl font-bold'>{user.username}</p>
                                 </div>
-                                <p className='text-2xl text-red-500 ml-auto'>-204,94€</p>
+                                <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount > 0 ? '#fc1303' : '#00c711' }}>{owedAmount !== null && owedAmount > 0 ? "-" : ""}{owedAmount}{getCurrencySymbol("EUR")}</p>
                             </div>
                         )}
                     </GlassPanel>
@@ -174,8 +204,8 @@ const debts = () => {
                                         <p className='ml-4 text-md font-bold'>Grund: {debt.description}</p>
                                     </div>
                                     <div className='flex flex-row items-end'>
-                                        <p className='text-2xl text-red-500 ml-auto'>-{debt.remaining}{getCurrencySymbol(debt.currency)}</p>
-                                        <p className='text-md text-red-500 ml-1'>({debt.amount}{getCurrencySymbol(debt.currency)})</p>
+                                        <p className='text-2xl ml-auto' style={{ color: debt.remaining > 0 ? '#fc1303' : '#00c711' }}>{debt.remaining > 0 ? "-" : ""}{debt.remaining}{getCurrencySymbol(debt.currency)}</p>
+                                        <p className='text-md text-red-500 ml-1' style={{ color: debt.remaining > 0 ? '#fc1303' : '#00c711' }}>({debt.amount}{getCurrencySymbol(debt.currency)})</p>
                                     </div>
                                 </div>
                             ))}
@@ -212,7 +242,23 @@ const debts = () => {
                         )
                     }
                 />
-                <div className='w-full flex justify-center gap-x-4 mt-3'>
+                <Divider />
+                <div className='w-full flex justify-center items-end gap-x-4'>
+                    <CurrencyInput
+                        label='Abziehen'
+                        value={subtractAmount ?? null}
+                        onChange={(value) =>
+                            setSubtractAmount(value ?? 0)
+                        }
+                        currency="EUR"
+                        onCurrencyChange={() => { }}
+                    />
+                    <div>
+                        <Button onClick={() => { handleSubtractSpecific() }}>Abziehen</Button>
+                    </div>
+                </div>
+                <Divider />
+                <div className='w-full flex justify-center gap-x-4'>
                     <Button onClick={() => { handleEditDebt() }}>Speichern</Button>
                     <Button onClick={() => { setEditDebtModalOpen(false); setDeleteConfirmModalOpen(true) }}>Löschen</Button>
                 </div>

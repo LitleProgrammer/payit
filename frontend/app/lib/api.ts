@@ -38,6 +38,10 @@ export interface CreateDebtResponse {
     updatedDebts: Debt[];
 }
 
+export interface BalanceResponse {
+    amountOwed: number;
+}
+
 export interface Payment {
     _id?: string;
     amount: number;
@@ -190,6 +194,12 @@ export async function paySpecific(data: {
     });
 
     return res.json() as Promise<ApiResponse<{ payment: Payment, updatedDebts: Debt[] }>>;
+}
+
+export async function getAmountOwed(userID: string) {
+    const res = await apiFetch(`/debts/owedby/${userID}`);
+
+    return res.json() as Promise<ApiResponse<BalanceResponse>>;
 }
 
 /**

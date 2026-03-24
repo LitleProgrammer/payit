@@ -68,11 +68,11 @@ export function createPaymentRouter(
             }
 
             const payment = await paymentRepo.createPaymentWithAllocations(
-                { from, to: debt.owner, amount, currency, createdAt: new Date() },
+                { from, to: debt.debtor, amount, currency, createdAt: new Date() },
                 [{ debtId: debtId.toString(), amount }]
             );
 
-            const updatedDebts = await debtService.getDebtsWithRemaining(debt.owner, from);
+            const updatedDebts = await debtService.getDebtsWithRemaining(from, debt.debtor);
 
             res.status(201).json({
                 message: "Debt payment recorded",

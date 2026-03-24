@@ -37,7 +37,7 @@ async function start() {
 
     app.use("/users", createUserRouter(authService));
     app.use("/shadows", createShadowRouter());
-    app.use("/debts", createDebtRouter(debtService, debtRepo));
+    app.use("/debts", createDebtRouter(debtService, debtRepo, paymentRepo));
     app.use("/payments", createPaymentRouter(paymentRepo, debtRepo, paymentService, debtService));
 
 

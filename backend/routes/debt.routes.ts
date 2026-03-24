@@ -3,10 +3,12 @@ import { Router } from "express";
 import { authenticateToken, AuthRequest } from "../middleware/auth.middleware";
 import { DebtService } from "../services/debt.service";
 import { DebtRepository } from "../repositories/debt.repository";
+import { PaymentRepository } from "../repositories/payment.repository";
 
 export function createDebtRouter(
     debtService: DebtService,
-    debtRepo: DebtRepository
+    debtRepo: DebtRepository,
+    paymentRepo: PaymentRepository
 ) {
     const router = Router();
 
@@ -131,6 +133,35 @@ export function createDebtRouter(
             res.status(400).json({
                 error: err.message,
             });
+        }
+    });
+
+    router.get("/owedby/:userId", authenticateToken, async (req: AuthRequest, res) => {
+        try {
+            const owner = req.user!.userId;
+            const { userId } = req.params;
+
+            const debts = await debtRepo.findDebtsBetweenUsers(owner, userId.toString());
+
+            let total = 0;
+
+            for (const debt of debts) {
+                const paid = await paymentRepo.getPaidAmountForDebt(debt._id!.toString());
+                total += (debt.amount - paid);
+            }
+
+            console.log({ amountOwed: total });
+
+
+            res.json({
+                message: "Balance fetched",
+                data: {
+                    amountOwed: total
+                }
+            });
+
+        } catch (err: any) {
+            res.status(400).json({ error: err.message });
         }
     });
 
