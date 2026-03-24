@@ -46,8 +46,6 @@ export class DebtRepository {
     }
 
     async findDebtsBetweenUsers(owner: string, debtor: string): Promise<Debt[]> {
-        console.log(owner, debtor);
-
         return await this.debts
             .find({ owner, debtor })
             .sort({ createdAt: 1 }) // oldest first

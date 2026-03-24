@@ -12,8 +12,6 @@ export class PaymentService {
     async autoAllocate(from: string, to: string, amount: number) {
         const debts = await this.debtRepo.findDebtsBetweenUsers(to, from);
 
-        console.log("Found following debts: ", debts);
-
         let remaining = amount;
         const allocations: { debtId: string; amount: number }[] = [];
 
@@ -24,9 +22,6 @@ export class PaymentService {
             if (remainingDebt <= 0) continue;
 
             const applied = Math.min(remainingDebt, remaining);
-
-            console.log("Applied subtract: ", applied);
-
 
             allocations.push({
                 debtId: debt._id!.toString(),

@@ -20,19 +20,12 @@ export function createPaymentRouter(
             const { to, amount, currency } = req.body;
             const from = req.user!.userId;
 
-            console.log("Got parameters: ", to, amount, currency);
-
             const allocations = await paymentService.autoAllocate(to, from, amount);
-
-            console.log("Allocated: ", allocations);
 
             const payment = await paymentRepo.createPaymentWithAllocations(
                 { from, to, amount, currency, createdAt: new Date() },
                 allocations
             );
-
-            console.log("Created payment: ", payment);
-
 
             const updatedDebts = await debtService.getDebtsWithRemaining(from, to);
 

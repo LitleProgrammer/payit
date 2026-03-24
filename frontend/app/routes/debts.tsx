@@ -59,8 +59,6 @@ const debts = () => {
         async function fetchData() {
             const debtsRes = await getUserDebts(id);
             if (debtsRes.data) {
-                console.log(debtsRes.data);
-
                 setDebts(debtsRes.data);
             }
 
@@ -70,8 +68,6 @@ const debts = () => {
             }
 
             const owedRes = await getAmountOwed(id);
-            console.log("owedRes: ", owedRes);
-
             if (owedRes.data) {
                 setOwedAmount(owedRes.data.amountOwed);
             }
@@ -117,14 +113,9 @@ const debts = () => {
 
     async function handleDeleteDebt() {
         if (selectedDebt) {
-            console.log("Selected debt");
-
             if (!selectedDebt._id) return;
 
-            console.log("Trying to delete debt");
-
             const res = await deleteDebt(selectedDebt._id);
-            console.log("Deleted debt");
 
             if (res.data) {
                 setDebts(res.data);
@@ -144,8 +135,6 @@ const debts = () => {
             });
 
             if (res.data) {
-                console.log("Return: ", res.data.updatedDebts);
-
                 setDebts(res.data.updatedDebts);
             }
 

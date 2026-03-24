@@ -107,9 +107,6 @@ export function createDebtRouter(
             const { id } = req.params;
             const owner = req.user!.userId;
 
-            console.log("Delete debt: ", id, owner);
-
-
             const updatedDebts = await debtRepo.deleteDebt(id, owner);
 
             if (!updatedDebts) {
@@ -149,9 +146,6 @@ export function createDebtRouter(
                 const paid = await paymentRepo.getPaidAmountForDebt(debt._id!.toString());
                 total += (debt.amount - paid);
             }
-
-            console.log({ amountOwed: total });
-
 
             res.json({
                 message: "Balance fetched",

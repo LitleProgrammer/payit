@@ -162,8 +162,6 @@ export async function editDebt(data: Debt) {
 }
 
 export async function deleteDebt(debtID: string) {
-    console.log("Deleting");
-
     const res = await apiFetch(`/debts/delete/${debtID}`, {
         method: "DELETE"
     });

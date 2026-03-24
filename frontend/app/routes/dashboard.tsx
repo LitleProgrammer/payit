@@ -46,14 +46,8 @@ export default function Dashboard() {
     const [debtDescription, setDebtDescription] = useState<string | null>(null);
 
     useEffect(() => {
-        console.log("Whatb");
-
         async function fetchContacts() {
-            console.log("starting to get contacts");
-
             const res = await getShadowUsers();
-
-            console.log("Contacts:", res);
 
             if (res.data) {
                 setContacts(res.data);
@@ -62,13 +56,6 @@ export default function Dashboard() {
 
         fetchContacts();
     }, []);
-
-    useEffect(() => {
-        if (selectedUser) {
-            console.log(selectedUser);
-
-        }
-    }, [selectedUser]);
 
     async function handleCreateShadowUser() {
         if (shadowUserName) {

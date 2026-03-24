@@ -53,9 +53,6 @@ export class PaymentRepository {
             }
         ]).toArray();
 
-        console.log("Returnoing in payrepo: ", result[0]?.total || 0);
-
-
         return result[0]?.total || 0;
     }
 
