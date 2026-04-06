@@ -60,4 +60,16 @@ export class PaymentRepository {
         const paid = await this.getPaidAmountForDebt(debtId);
         return originalAmount - paid;
     }
+
+    async reassignPaymentParticipant(oldUserId: string, newUserId: string): Promise<void> {
+        await this.payments.updateMany(
+            { from: oldUserId },
+            { $set: { from: newUserId } }
+        );
+
+        await this.payments.updateMany(
+            { to: oldUserId },
+            { $set: { to: newUserId } }
+        );
+    }
 }

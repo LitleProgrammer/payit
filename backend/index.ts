@@ -11,6 +11,9 @@ import { createPaymentRouter } from "./routes/payment.routes";
 import { PaymentRepository } from "./repositories/payment.repository";
 import { DebtService } from "./services/debt.service";
 import { PaymentService } from "./services/payment.service";
+import { ConnectionRepository } from "./repositories/connection.repository";
+import { ConnectionService } from "./services/connection.service";
+import { createConnectionRouter } from "./routes/connection.routes";
 
 const app = express();
 app.use(express.json());
@@ -30,15 +33,19 @@ async function start() {
     const userRepo = new UserRepository(db);
     const debtRepo = new DebtRepository(db);
     const paymentRepo = new PaymentRepository(db);
+    const connectionRepo = new ConnectionRepository(db);
 
     const authService = new AuthService(userRepo);
     const debtService = new DebtService(debtRepo, paymentRepo);
     const paymentService = new PaymentService(debtRepo, paymentRepo);
+    const connectionService = new ConnectionService(connectionRepo);
+
 
     app.use("/users", createUserRouter(authService));
-    app.use("/shadows", createShadowRouter());
+    app.use("/shadows", createShadowRouter(userRepo, debtRepo, paymentRepo, connectionService));
     app.use("/debts", createDebtRouter(debtService, debtRepo, paymentRepo));
     app.use("/payments", createPaymentRouter(paymentRepo, debtRepo, paymentService, debtService));
+    app.use("/connections", createConnectionRouter(connectionService));
 
 
     app.listen(3000, () => {
