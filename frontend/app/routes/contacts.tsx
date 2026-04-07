@@ -34,8 +34,6 @@ const contacts = () => {
             }
 
             const contactRes = await getUserConnections();
-            console.log(contactRes);
-
             if (contactRes.data) {
                 setContacts(contactRes.data);
             }

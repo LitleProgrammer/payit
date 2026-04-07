@@ -56,14 +56,7 @@ export function createUserRouter(authService: AuthService, userRepo: UserReposit
     router.get("/anyone/:userId", authenticateToken, async (req, res) => {
         try {
             const userId = req.params.userId;
-
-            console.log("Getting: ", userId);
-
-
             const user = await userRepo.findAnyoneById(userId.toString());
-
-            console.log("Found: ", user);
-
 
             res.json({
                 message: "User found",

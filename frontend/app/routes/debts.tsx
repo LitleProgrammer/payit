@@ -71,8 +71,6 @@ const debts = () => {
             }
 
             const userRes = await getAnyoneById(id);
-            console.log(userRes);
-
             if (userRes.data) {
                 setUser(userRes.data);
             }

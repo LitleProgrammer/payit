@@ -9,7 +9,7 @@ import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute'
-import { createShadowUser, getShadowUsers, createDebt } from '~/lib/api';
+import { createShadowUser, getShadowUsers, createDebt, getUserConnections } from '~/lib/api';
 import { useNavigate } from 'react-router';
 
 export interface Contact {
@@ -55,6 +55,11 @@ export default function Dashboard() {
             if (res.data) {
                 setContacts(res.data);
             }
+
+            const userRes = await getUserConnections();
+            if (userRes.data) {
+                setContacts(prev => [...prev, ...(userRes.data ?? [])]);
+            }
         }
 
         fetchContacts();
@@ -65,6 +70,11 @@ export default function Dashboard() {
             const createRes = await createShadowUser(shadowUserName);
             if (createRes.data && createRes.data.updatedShadowUsers) {
                 setContacts(createRes.data.updatedShadowUsers);
+
+                const userRes = await getUserConnections();
+                if (userRes.data) {
+                    setContacts(prev => [...prev, ...(userRes.data ?? [])]);
+                }
             }
         }
     }

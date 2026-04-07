@@ -34,7 +34,8 @@ export function createShadowRouter(
                 connectedToUserId: null
             });
 
-            const shadowUsers = await userRepo.findShadowUsersByOwnerId(req.user!.userId);
+            var shadowUsers = await userRepo.findShadowUsersByOwnerId(req.user!.userId);
+            shadowUsers = shadowUsers.filter(shadowUser => shadowUser.status === "active");
 
             res.status(201).json({
                 message: "User created",
