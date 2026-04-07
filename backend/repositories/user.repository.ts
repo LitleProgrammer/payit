@@ -44,6 +44,17 @@ export class UserRepository {
         return this.users.findOne({ _id: new ObjectId(userId) });
     }
 
+    async findAnyoneById(userId: string): Promise<User | ShadowUser | null> {
+        var user: User | ShadowUser | null;
+        user = await this.users.findOne({ _id: new ObjectId(userId) });
+
+        if (!user) {
+            user = await this.shadowUsers.findOne({ _id: new ObjectId(userId) });
+        }
+
+        return user;
+    }
+
     async linkShadowUser(shadowUserId: string, ownerId: string, realUserId: string): Promise<void> {
         await this.shadowUsers.updateOne(
             { _id: new ObjectId(shadowUserId), owner: ownerId },

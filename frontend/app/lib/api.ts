@@ -56,6 +56,15 @@ export interface Allocation {
     amount: number;
 }
 
+export interface ShadowUser {
+    _id?: string;
+    username: string;
+    createdAt: Date;
+    owner: string; //The userId of the user that created the shadow user
+    status: "active" | "connected";
+    connectedToUserId?: string | null;
+}
+
 const API_URL = "http://localhost:3000"; // your express server
 
 async function apiFetch(
@@ -200,8 +209,38 @@ export async function getAmountOwed(userID: string) {
     return res.json() as Promise<ApiResponse<BalanceResponse>>;
 }
 
-/**
- * Next steps: 
- * check what is returned from backend and what is expected as return in frontend
- * then check what is used wanted where the functions are used
- */
+export async function getUserConnections() {
+    const res = await apiFetch("/connections");
+    return res.json() as Promise<ApiResponse<Contact[]>>;
+}
+
+export async function generateConnectionCode() {
+    const res = await apiFetch("/connections/code", {
+        method: "POST"
+    });
+
+    return res.json() as Promise<ApiResponse<{ code: string, expiresAt: Date }>>;
+}
+
+export async function redeemConnectionCode(code: string) {
+    const res = await apiFetch("/connections/code/redeem", {
+        method: "POST",
+        body: JSON.stringify({ code })
+    });
+
+    return res.json() as Promise<ApiResponse<{}>>;
+}
+
+export async function linkShadowUser(shadowUserId: string, realUserId: string) {
+    const res = await apiFetch("/shadows/" + shadowUserId + "/link", {
+        method: "POST",
+        body: JSON.stringify({ realUserId })
+    });
+
+    return res.json() as Promise<ApiResponse<{ shadowUserId: string, realUserId: string, updatedShadowUsers: ShadowUser[] }>>;
+}
+
+export async function getAnyoneById(id: string) {
+    const res = await apiFetch("/users/anyone/" + id);
+    return res.json() as Promise<ApiResponse<Contact>>;
+}

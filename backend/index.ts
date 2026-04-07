@@ -41,11 +41,11 @@ async function start() {
     const connectionService = new ConnectionService(connectionRepo);
 
 
-    app.use("/users", createUserRouter(authService));
+    app.use("/users", createUserRouter(authService, userRepo));
     app.use("/shadows", createShadowRouter(userRepo, debtRepo, paymentRepo, connectionService));
     app.use("/debts", createDebtRouter(debtService, debtRepo, paymentRepo));
     app.use("/payments", createPaymentRouter(paymentRepo, debtRepo, paymentService, debtService));
-    app.use("/connections", createConnectionRouter(connectionService));
+    app.use("/connections", createConnectionRouter(connectionService, userRepo));
 
 
     app.listen(3000, () => {

@@ -55,7 +55,8 @@ export function createShadowRouter(
 
     router.get("/", authenticateToken, async (req: AuthRequest, res) => {
         try {
-            const shadowUsers = await userRepo.findShadowUsersByOwnerId(req.user!.userId);
+            var shadowUsers = await userRepo.findShadowUsersByOwnerId(req.user!.userId);
+            shadowUsers = shadowUsers.filter(shadowUser => shadowUser.status === "active");
 
             res.status(200).json({
                 message: "success",

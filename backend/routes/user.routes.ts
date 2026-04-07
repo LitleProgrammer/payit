@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { AuthService } from "../services/auth.service";
+import { UserRepository } from "../repositories/user.repository";
+import { authenticateToken } from "../middleware/auth.middleware";
 
-export function createUserRouter(authService: AuthService) {
+export function createUserRouter(authService: AuthService, userRepo: UserRepository) {
     const router = Router();
 
     router.post("/signup", async (req, res) => {
@@ -48,6 +50,29 @@ export function createUserRouter(authService: AuthService) {
                 error: err.message
             });
 
+        }
+    });
+
+    router.get("/anyone/:userId", authenticateToken, async (req, res) => {
+        try {
+            const userId = req.params.userId;
+
+            console.log("Getting: ", userId);
+
+
+            const user = await userRepo.findAnyoneById(userId.toString());
+
+            console.log("Found: ", user);
+
+
+            res.json({
+                message: "User found",
+                data: user
+            });
+        } catch (err: any) {
+            res.status(400).json({
+                error: err.message
+            });
         }
     });
 
