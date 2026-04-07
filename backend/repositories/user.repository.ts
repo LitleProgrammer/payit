@@ -20,7 +20,7 @@ export class UserRepository {
         const result = await this.users.insertOne(user);
         return {
             ...user,
-            _id: result.insertedId.toString()
+            _id: result.insertedId
         };
     }
 
@@ -38,5 +38,35 @@ export class UserRepository {
 
     async findShadowUserById(shadowUserId: string): Promise<ShadowUser | null> {
         return this.shadowUsers.findOne({ _id: new ObjectId(shadowUserId) });
+    }
+
+    async findUserById(userId: string): Promise<User | null> {
+        return this.users.findOne({ _id: new ObjectId(userId) });
+    }
+
+    async findAnyoneById(userId: string): Promise<User | ShadowUser | null> {
+        var user: User | ShadowUser | null;
+        user = await this.users.findOne({ _id: new ObjectId(userId) });
+
+        if (!user) {
+            user = await this.shadowUsers.findOne({ _id: new ObjectId(userId) });
+        }
+
+        return user;
+    }
+
+    async linkShadowUser(shadowUserId: string, ownerId: string, realUserId: string): Promise<void> {
+        await this.shadowUsers.updateOne(
+            { _id: new ObjectId(shadowUserId), owner: ownerId },
+            { $set: { connectedToUserId: realUserId, status: "connected" } }
+        );
+    }
+
+    async findActiveShadowUsersByOwnerId(owner: string): Promise<ShadowUser[]> {
+        return this.shadowUsers.find({ owner, status: "active" }).toArray();
+    }
+
+    async findLinkedShadowUser(owner: string, realUserId: string): Promise<ShadowUser | null> {
+        return this.shadowUsers.findOne({ owner, connectedToUserId: realUserId });
     }
 }

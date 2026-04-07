@@ -9,7 +9,8 @@ import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute'
-import { createShadowUser, getShadowUsers, createDebt } from '~/lib/api';
+import { createShadowUser, getShadowUsers, createDebt, getUserConnections } from '~/lib/api';
+import { useNavigate } from 'react-router';
 
 export interface Contact {
     _id: string
@@ -34,6 +35,8 @@ export interface CreateDebtResponse {
 }
 
 export default function Dashboard() {
+    const navigate = useNavigate();
+
     const [selectUserModalOpen, setSelectUserModalOpen] = useState(false);
     const [createDebtModalOpen, setCreateDebtModalOpen] = useState(false);
 
@@ -52,6 +55,11 @@ export default function Dashboard() {
             if (res.data) {
                 setContacts(res.data);
             }
+
+            const userRes = await getUserConnections();
+            if (userRes.data) {
+                setContacts(prev => [...prev, ...(userRes.data ?? [])]);
+            }
         }
 
         fetchContacts();
@@ -62,6 +70,11 @@ export default function Dashboard() {
             const createRes = await createShadowUser(shadowUserName);
             if (createRes.data && createRes.data.updatedShadowUsers) {
                 setContacts(createRes.data.updatedShadowUsers);
+
+                const userRes = await getUserConnections();
+                if (userRes.data) {
+                    setContacts(prev => [...prev, ...(userRes.data ?? [])]);
+                }
             }
         }
     }
@@ -112,7 +125,7 @@ export default function Dashboard() {
                 <div className='-amber-600 h-11/12 w-full'>
                     <div className='h-2/6 p-3'>
                         <GlassPanel>
-                            <p className='text-right mb-1 hover:underline transition-all duration-700 hover:cursor-pointer'>Alle Kontakte →</p>
+                            <p className='text-right mb-1 hover:underline transition-all duration-700 hover:cursor-pointer' onClick={() => navigate("/contacts")}>Alle Kontakte →</p>
                             <ContactAvatarList contacts={contacts.slice(0, 8)} />
                         </GlassPanel>
                     </div>

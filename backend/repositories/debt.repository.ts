@@ -59,4 +59,11 @@ export class DebtRepository {
             _id: new ObjectId(debtId)
         });
     }
+
+    async reassignDebtor(oldUserId: string, newUserId: string, ownerId: string): Promise<void> {
+        await this.debts.updateMany(
+            { debtor: oldUserId, owner: ownerId },
+            { $set: { debtor: newUserId } }
+        );
+    }
 }

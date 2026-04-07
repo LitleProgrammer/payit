@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Avatar } from '~/components/ui/Avatar';
 import { Button } from '~/components/ui/Button';
+import { ContactSelect } from '~/components/ui/ContactSelect';
 import { CurrencyInput } from '~/components/ui/CurrencyInput';
 import { Divider } from '~/components/ui/Divider';
 import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute';
-import { getUserDebts, getShadowUser, editDebt, deleteDebt, payAny, paySpecific, getAmountOwed } from '~/lib/api';
+import { getUserDebts, getShadowUsers, editDebt, deleteDebt, payAny, paySpecific, getAmountOwed, getAnyoneById, linkShadowUser } from '~/lib/api';
 
 export interface Debt {
     _id?: string;
@@ -45,11 +46,18 @@ const debts = () => {
     const [debts, setDebts] = useState<Debt[]>([]);
     const [user, setUser] = useState<Contact | null>(null);
     const [owedAmount, setOwedAmount] = useState<number | null>(null);
+
     const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
     const [editDebtModalOpen, setEditDebtModalOpen] = useState(false);
+
     const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
+
     const [subtractModalOpen, setSubtractModalOpen] = useState(false);
     const [subtractAmount, setSubtractAmount] = useState<number | null>(null);
+
+    const [linkShadowModalOpen, setLinkShadowModalOpen] = useState(false);
+    const [shadowUsers, setShadowUsers] = useState<Contact[]>([]);
+    const [selectedLinkShadowUser, setSelectedLinkShadowUser] = useState<Contact | null>(null);
 
     const navigate = useNavigate();
 
@@ -62,7 +70,7 @@ const debts = () => {
                 setDebts(debtsRes.data);
             }
 
-            const userRes = await getShadowUser(id);
+            const userRes = await getAnyoneById(id);
             if (userRes.data) {
                 setUser(userRes.data);
             }
@@ -70,6 +78,11 @@ const debts = () => {
             const owedRes = await getAmountOwed(id);
             if (owedRes.data) {
                 setOwedAmount(owedRes.data.amountOwed);
+            }
+
+            const shadowUsersRes = await getShadowUsers();
+            if (shadowUsersRes.data) {
+                setShadowUsers(shadowUsersRes.data);
             }
         }
 
@@ -161,6 +174,17 @@ const debts = () => {
         }
     }
 
+    async function handleLinkShadow() {
+        if (selectedLinkShadowUser && selectedLinkShadowUser._id && user && user._id) {
+            const res = await linkShadowUser(selectedLinkShadowUser._id, user._id);
+            if (res.data) {
+                setSelectedLinkShadowUser(null);
+                setLinkShadowModalOpen(false);
+                navigate(0);
+            }
+        }
+    }
+
     return (
         <ProtectedRoute>
             <div className='p-3'>
@@ -170,12 +194,17 @@ const debts = () => {
                 <div className='flex flex-col'>
                     <GlassPanel>
                         {user && (
-                            <div className='flex items-center w-full'>
-                                <div className='flex items-center'>
-                                    <Avatar username={user.username} size={17} fontSize='text-2xl' />
-                                    <p className='ml-4 text-2xl font-bold'>{user.username}</p>
+                            <div>
+                                <div className='flex items-center w-full'>
+                                    <div className='flex items-center'>
+                                        <Avatar username={user.username} size={17} fontSize='text-2xl' />
+                                        <p className='ml-4 text-2xl font-bold'>{user.username}</p>
+                                    </div>
+                                    <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount > 0 ? '#fc1303' : '#00c711' }}>{owedAmount !== null && owedAmount > 0 ? "-" : ""}{owedAmount}{getCurrencySymbol("EUR")}</p>
                                 </div>
-                                <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount > 0 ? '#fc1303' : '#00c711' }}>{owedAmount !== null && owedAmount > 0 ? "-" : ""}{owedAmount}{getCurrencySymbol("EUR")}</p>
+                                <div className='w-full flex justify-center pt-2'>
+                                    <Button onClick={() => setLinkShadowModalOpen(true)} >Link Shadow</Button>
+                                </div>
                             </div>
                         )}
                     </GlassPanel>
@@ -273,6 +302,15 @@ const debts = () => {
                 />
                 <div className='w-full flex justify-center gap-x-4 mt-3'>
                     <Button onClick={() => handleSubtract()}>Abziehen</Button>
+                </div>
+            </Modal>
+            <Modal open={linkShadowModalOpen} onClose={() => setLinkShadowModalOpen(false)}>
+                <h2 className='text-2xl font-bold py-2'>Kontakt verbinden</h2>
+                <p>Wähle einen ShadowUser aus, um ihn mit diesem Kontak zu verbinden</p>
+
+                <div className='w-full flex flex-col justify-center gap-4 mt-3'>
+                    <ContactSelect contacts={shadowUsers} onSelect={setSelectedLinkShadowUser} />
+                    <Button onClick={() => handleLinkShadow()}>Verbinden</Button>
                 </div>
             </Modal>
         </ProtectedRoute >
