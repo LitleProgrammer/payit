@@ -41,6 +41,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
 }) => {
     const [display, setDisplay] = useState("");
     const [open, setOpen] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
 
     const formatter = useMemo(() => {
         return new Intl.NumberFormat(locale, {
@@ -59,12 +60,25 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
 
     // Sync external value → display
     useEffect(() => {
+        if (isFocused) return;
+
         if (value === null || value === undefined) {
             setDisplay("");
         } else {
             setDisplay(formatter.format(value));
         }
-    }, [value, formatter]);
+    }, [value, formatter, isFocused]);
+
+    const handleBlur = () => {
+        setIsFocused(false);
+
+        if (value === null) {
+            setDisplay("");
+            return;
+        }
+
+        setDisplay(formatter.format(value));
+    };
 
     // STRICT parsing (max 2 decimals)
     const parse = (input: string): number | null => {
@@ -113,15 +127,6 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
         if (max !== undefined && finalValue > max) finalValue = max;
 
         onChange(finalValue);
-    };
-
-    const handleBlur = () => {
-        if (value === null) {
-            setDisplay("");
-            return;
-        }
-
-        setDisplay(formatter.format(value));
     };
 
     return (
@@ -188,6 +193,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
                 <input
                     value={display}
                     onChange={handleChange}
+                    onFocus={() => setIsFocused(true)}
                     onBlur={handleBlur}
                     placeholder={placeholder}
                     disabled={disabled}
