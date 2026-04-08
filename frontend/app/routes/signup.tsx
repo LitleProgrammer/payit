@@ -63,6 +63,9 @@ export default function Signup() {
                     </Button>
 
                 </form>
+                <div className="w-full flex items-center justify-center mt-3">
+                    <a href="/impressum" className="text-xs hover:underline text-center text-blue-500">Impressum</a>
+                </div>
                 <p className="text-sm mt-4">Hast schon ein Account? <a href="/login" className="text-blue-500 hover:underline">Login</a></p>
             </GlassPanel>
 

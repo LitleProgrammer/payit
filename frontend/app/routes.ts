@@ -7,4 +7,5 @@ export default [
     route("dashboard", "routes/dashboard.tsx"),
     route("debts/:userID", "routes/debts.tsx"),
     route("contacts", "routes/contacts.tsx"),
+    route("impressum", "routes/imprint.tsx"),
 ] satisfies RouteConfig;
