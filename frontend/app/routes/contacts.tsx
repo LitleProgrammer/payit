@@ -66,7 +66,7 @@ const contacts = () => {
     return (
         <ProtectedRoute>
             <div className="p-3">
-                <div className='p-2'>
+                <div className='p-2 flex flex-row justify-between items-center'>
                     <p onClick={() => { navigate('/dashboard') }} className='hover:underline hover:cursor-pointer'>← Zurück</p>
                     <Button onClick={handleInitiateConnect} >Neue Verbindung</Button>
                 </div>
