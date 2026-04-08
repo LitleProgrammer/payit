@@ -77,7 +77,7 @@ const debts = () => {
 
             const owedRes = await getAmountOwed(id);
             if (owedRes.data) {
-                setOwedAmount(owedRes.data.amountOwed);
+                setOwedAmount(Math.round(owedRes.data.amountOwed * 100) / 100);
             }
 
             const shadowUsersRes = await getShadowUsers();
