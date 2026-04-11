@@ -9,7 +9,7 @@ import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute';
-import { getUserDebts, getShadowUsers, editDebt, deleteDebt, payAny, paySpecific, getAmountOwed, getAnyoneById, linkShadowUser } from '~/lib/api';
+import { getUserDebts, getShadowUsers, editDebt, deleteDebt, payAny, paySpecific, getAmountOwed, getAnyoneById, linkShadowUser, getDebtsIOwe, getBalance } from '~/lib/api';
 
 export interface Debt {
     _id?: string;
@@ -43,7 +43,8 @@ const debts = () => {
 
     const id = userID;
 
-    const [debts, setDebts] = useState<Debt[]>([]);
+    const [debtsTheyOwe, setDebtsTheyOwe] = useState<Debt[]>([]);
+    const [debtsIOwe, setDebtsIOwe] = useState<Debt[]>([]);
     const [user, setUser] = useState<Contact | null>(null);
     const [owedAmount, setOwedAmount] = useState<number | null>(null);
 
@@ -67,7 +68,12 @@ const debts = () => {
         async function fetchData() {
             const debtsRes = await getUserDebts(id);
             if (debtsRes.data) {
-                setDebts(debtsRes.data);
+                setDebtsTheyOwe(debtsRes.data);
+            }
+
+            const myDebtsRes = await getDebtsIOwe(id);
+            if (myDebtsRes.data) {
+                setDebtsIOwe(myDebtsRes.data);
             }
 
             const userRes = await getAnyoneById(id);
@@ -75,9 +81,9 @@ const debts = () => {
                 setUser(userRes.data);
             }
 
-            const owedRes = await getAmountOwed(id);
+            const owedRes = await getBalance(id);
             if (owedRes.data) {
-                setOwedAmount(Math.round(owedRes.data.amountOwed * 100) / 100);
+                setOwedAmount(Math.round(owedRes.data.balance * 100) / 100);
             }
 
             const shadowUsersRes = await getShadowUsers();
@@ -105,7 +111,7 @@ const debts = () => {
 
     function handleDebtClick(debtID: string | undefined) {
         if (!debtID) return;
-        const debt = debts.find((debt) => debt._id === debtID);
+        const debt = debtsTheyOwe.find((debt) => debt._id === debtID);
         if (debt) {
             setSelectedDebt(debt);
             setEditDebtModalOpen(true);
@@ -116,7 +122,7 @@ const debts = () => {
         if (selectedDebt) {
             const res = await editDebt(selectedDebt);
             if (res.data) {
-                setDebts(res.data);
+                setDebtsTheyOwe(res.data);
             }
 
             setSelectedDebt(null);
@@ -131,7 +137,7 @@ const debts = () => {
             const res = await deleteDebt(selectedDebt._id);
 
             if (res.data) {
-                setDebts(res.data);
+                setDebtsTheyOwe(res.data);
             }
 
             setSelectedDebt(null);
@@ -148,7 +154,7 @@ const debts = () => {
             });
 
             if (res.data) {
-                setDebts(res.data.updatedDebts);
+                setDebtsTheyOwe(res.data.updatedDebts);
             }
 
             setSelectedDebt(null);
@@ -165,7 +171,7 @@ const debts = () => {
             }, selectedDebt._id);
 
             if (res.data) {
-                setDebts(res.data.updatedDebts);
+                setDebtsTheyOwe(res.data.updatedDebts);
             }
 
             setSelectedDebt(null);
@@ -200,7 +206,7 @@ const debts = () => {
                                         <Avatar username={user.username} size={17} fontSize='text-2xl' />
                                         <p className='ml-4 text-2xl font-bold'>{user.username}</p>
                                     </div>
-                                    <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount > 0 ? '#fc1303' : '#00c711' }}>{owedAmount !== null && owedAmount > 0 ? "-" : ""}{owedAmount}{getCurrencySymbol("EUR")}</p>
+                                    <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount < 0 ? '#fc1303' : '#00c711' }}>{owedAmount}{getCurrencySymbol("EUR")}</p>
                                 </div>
                                 <div className='w-full flex justify-center pt-2'>
                                     <Button onClick={() => setLinkShadowModalOpen(true)} >Link Shadow</Button>
@@ -211,23 +217,42 @@ const debts = () => {
                 </div>
                 <div className='mt-3'>
                     <div className='flex justify-between mb-3'>
-                        <h2 className='text-2xl font-bold py-2'>Schulden:</h2>
+                        <h2 className='text-2xl font-bold py-2'>Schuldet dir:</h2>
                         <Button onClick={() => setSubtractModalOpen(true)}>Abziehen</Button>
                     </div>
                     <GlassPanel>
                         <div className='flex flex-col gap-4 divide-y divide-white/10'>
-                            {debts.map((debt) => (
+                            {debtsTheyOwe.map((debt) => (
                                 <div key={debt._id} className='flex items-center justify-between w-full pb-4 transition-all duration-150 hover:cursor-pointer hover:scale-[1.005]' onClick={() => handleDebtClick(debt._id)}>
                                     <div className='flex flex-col items-start'>
                                         <p className='ml-4 text-md font-bold'>Grund: {debt.description}</p>
                                     </div>
                                     <div className='flex flex-row items-end'>
-                                        <p className='text-2xl ml-auto' style={{ color: debt.remaining > 0 ? '#fc1303' : '#00c711' }}>{debt.remaining > 0 ? "-" : ""}{debt.remaining}{getCurrencySymbol(debt.currency)}</p>
-                                        <p className='text-md text-red-500 ml-1' style={{ color: debt.remaining > 0 ? '#fc1303' : '#00c711' }}>({debt.amount}{getCurrencySymbol(debt.currency)})</p>
+                                        <p className='text-2xl ml-auto' style={{ color: debt.remaining > 0 ? '#00c711' : '#ffff' }}>{debt.remaining > 0 ? "" : ""}{debt.remaining}{getCurrencySymbol(debt.currency)}</p>
+                                        <p className='text-md text-red-500 ml-1' style={{ color: debt.remaining > 0 ? '#00c711' : '#fff' }}>({debt.amount}{getCurrencySymbol(debt.currency)})</p>
                                     </div>
                                 </div>
                             ))}
-                            {debts.length === 0 && (
+                            {debtsTheyOwe.length === 0 && (
+                                <p className='text-center'>Keine Schulden gefunden.</p>
+                            )}
+                        </div>
+                    </GlassPanel>
+                    <h2 className='text-2xl font-bold py-2'>Du schuldest:</h2>
+                    <GlassPanel>
+                        <div className='flex flex-col gap-4 divide-y divide-white/10'>
+                            {debtsIOwe.map((debt) => (
+                                <div key={debt._id} className='flex items-center justify-between w-full pb-4 transition-all duration-150 hover:cursor-pointer hover:scale-[1.005]' onClick={() => handleDebtClick(debt._id)}>
+                                    <div className='flex flex-col items-start'>
+                                        <p className='ml-4 text-md font-bold'>Grund: {debt.description}</p>
+                                    </div>
+                                    <div className='flex flex-row items-end'>
+                                        <p className='text-2xl ml-auto' style={{ color: debt.remaining > 0 ? '#fc1303' : '#fff' }}>{debt.remaining > 0 ? "-" : ""}{debt.remaining}{getCurrencySymbol(debt.currency)}</p>
+                                        <p className='text-md text-red-500 ml-1' style={{ color: debt.remaining > 0 ? '#fc1303' : '#fff' }}>({debt.amount}{getCurrencySymbol(debt.currency)})</p>
+                                    </div>
+                                </div>
+                            ))}
+                            {debtsTheyOwe.length === 0 && (
                                 <p className='text-center'>Keine Schulden gefunden.</p>
                             )}
                         </div>

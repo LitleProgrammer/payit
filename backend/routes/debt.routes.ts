@@ -133,27 +133,61 @@ export function createDebtRouter(
         }
     });
 
-    router.get("/owedby/:userId", authenticateToken, async (req: AuthRequest, res) => {
+    router.get("/owedto/:userId", authenticateToken, async (req: AuthRequest, res) => {
         try {
-            const owner = req.user!.userId;
+            const currentUserId = req.user!.userId;
             const { userId } = req.params;
 
-            const debts = await debtRepo.findDebtsBetweenUsers(owner, userId.toString());
+            const debts = await debtService.getDebtsYouOweToUser(currentUserId, userId.toString());
 
-            let total = 0;
+            res.status(200).json({
+                message: "Debts found",
+                data: debts
+            });
+        } catch (err: any) {
+            res.status(400).json({
+                error: err.message
+            });
+        }
+    });
 
-            for (const debt of debts) {
-                const paid = await paymentRepo.getPaidAmountForDebt(debt._id!.toString());
-                total += (debt.amount - paid);
+    router.get("/balance/:userId", authenticateToken, async (req: AuthRequest, res) => {
+        try {
+            const currentUserId = req.user!.userId;
+            const { userId } = req.params;
+
+            if (!userId) {
+                return res.status(400).json({
+                    error: "Missing required fields"
+                });
             }
+
+            const theyOweYou = await debtRepo.findDebtsBetweenUsers(currentUserId, userId.toString());
+            const youOweThem = await debtRepo.findDebtsBetweenUsers(userId.toString(), currentUserId);
+
+            let theyOweYouTotal = 0;
+            let youOweThemTotal = 0;
+
+            for (const debt of theyOweYou) {
+                const paid = await paymentRepo.getPaidAmountForDebt(debt._id!.toString());
+                theyOweYouTotal += debt.amount - paid;
+            }
+
+            for (const debt of youOweThem) {
+                const paid = await paymentRepo.getPaidAmountForDebt(debt._id!.toString());
+                youOweThemTotal += debt.amount - paid;
+            }
+
+            const balance = theyOweYouTotal - youOweThemTotal;
 
             res.json({
                 message: "Balance fetched",
                 data: {
-                    amountOwed: total
+                    balance,
+                    theyOweYou: theyOweYouTotal,
+                    youOweThem: youOweThemTotal
                 }
             });
-
         } catch (err: any) {
             res.status(400).json({ error: err.message });
         }
