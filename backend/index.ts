@@ -14,6 +14,8 @@ import { PaymentService } from "./services/payment.service";
 import { ConnectionRepository } from "./repositories/connection.repository";
 import { ConnectionService } from "./services/connection.service";
 import { createConnectionRouter } from "./routes/connection.routes";
+import { DashboardService } from "./services/dashboard.service";
+import { createDashboardRouter } from "./routes/dashboard.routes";
 
 const app = express();
 app.use(express.json());
@@ -30,15 +32,16 @@ async function start() {
     await connect(MONGO_URL);
     const db = getDb();
 
-    const userRepo = new UserRepository(db);
     const debtRepo = new DebtRepository(db);
     const paymentRepo = new PaymentRepository(db);
     const connectionRepo = new ConnectionRepository(db);
+    const userRepo = new UserRepository(db, connectionRepo);
 
     const authService = new AuthService(userRepo);
     const debtService = new DebtService(debtRepo, paymentRepo);
     const paymentService = new PaymentService(debtRepo, paymentRepo);
     const connectionService = new ConnectionService(connectionRepo);
+    const dashboardService = new DashboardService(debtRepo, paymentRepo, userRepo);
 
 
     app.use("/users", createUserRouter(authService, userRepo));
@@ -46,6 +49,7 @@ async function start() {
     app.use("/debts", createDebtRouter(debtService, debtRepo, paymentRepo));
     app.use("/payments", createPaymentRouter(paymentRepo, debtRepo, paymentService, debtService));
     app.use("/connections", createConnectionRouter(connectionService, userRepo));
+    app.use("/dashboard", createDashboardRouter(dashboardService));
 
 
     app.listen(3000, () => {

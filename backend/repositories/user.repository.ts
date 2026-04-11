@@ -1,13 +1,17 @@
 import { Collection, Db, ObjectId } from "mongodb";
 import { User } from "../types/User";
 import { ShadowUser } from "../types/ShadowUser";
+import { ConnectionRepository } from "./connection.repository";
 
 export class UserRepository {
 
     private users: Collection<User>;
     private shadowUsers: Collection<ShadowUser>;
 
-    constructor(db: Db) {
+    constructor(
+        db: Db,
+        private connectionRepo: ConnectionRepository
+    ) {
         this.users = db.collection<User>("users");
         this.shadowUsers = db.collection<ShadowUser>("shadowUsers");
     }
@@ -68,5 +72,59 @@ export class UserRepository {
 
     async findLinkedShadowUser(owner: string, realUserId: string): Promise<ShadowUser | null> {
         return this.shadowUsers.findOne({ owner, connectedToUserId: realUserId });
+    }
+
+    async findDashboardContacts(ownerId: string): Promise<{ _id: string; username: string }[]> {
+        const activeShadowUsers = await this.shadowUsers.find({
+            owner: ownerId,
+            status: "active"
+        }).toArray();
+
+        const linkedShadowUsers = await this.shadowUsers.find({
+            owner: ownerId,
+            status: "connected",
+            connectedToUserId: { $ne: null }
+        }).toArray();
+
+        const linkedRealUserIds = linkedShadowUsers
+            .filter(s => s.connectedToUserId)
+            .map(s => s.connectedToUserId!);
+
+        const connections = await this.connectionRepo.getConnectionsForUser(ownerId);
+
+        const connectedUserIds = connections.map(connection =>
+            connection.userA === ownerId ? connection.userB : connection.userA
+        );
+
+        const allRealUserIds = Array.from(new Set([
+            ...linkedRealUserIds,
+            ...connectedUserIds
+        ]));
+
+        const realUsers = allRealUserIds.length > 0
+            ? await this.users.find({
+                _id: {
+                    $in: allRealUserIds.map(id => new ObjectId(id))
+                }
+            }).toArray()
+            : [];
+
+        const contactMap = new Map<string, { _id: string; username: string }>();
+
+        for (const shadow of activeShadowUsers) {
+            contactMap.set(shadow._id!.toString(), {
+                _id: shadow._id!.toString(),
+                username: shadow.username
+            });
+        }
+
+        for (const user of realUsers) {
+            contactMap.set(user._id!.toString(), {
+                _id: user._id!.toString(),
+                username: user.username
+            });
+        }
+
+        return Array.from(contactMap.values());
     }
 }

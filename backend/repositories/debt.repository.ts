@@ -66,4 +66,17 @@ export class DebtRepository {
             { $set: { debtor: newUserId } }
         );
     }
+
+    async findDebtsInvolvingUser(userId: string): Promise<Debt[]> {
+        return this.debts.find({
+            $or: [
+                { owner: userId },
+                { debtor: userId }
+            ]
+        }).toArray();
+    }
+
+    async findDebtsByDebtor(debtor: string): Promise<Debt[]> {
+        return this.debts.find({ debtor }).toArray();
+    }
 }

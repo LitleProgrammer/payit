@@ -206,7 +206,7 @@ const debts = () => {
                                         <Avatar username={user.username} size={17} fontSize='text-2xl' />
                                         <p className='ml-4 text-2xl font-bold'>{user.username}</p>
                                     </div>
-                                    <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount < 0 ? '#fc1303' : '#00c711' }}>{owedAmount}{getCurrencySymbol("EUR")}</p>
+                                    <p className='text-2xl ml-auto' style={{ color: owedAmount !== null && owedAmount < 0 ? '#fc1303' : '#00c711' }}>{owedAmount ? owedAmount.toFixed(2) : "0.00"}{getCurrencySymbol("EUR")}</p>
                                 </div>
                                 <div className='w-full flex justify-center pt-2'>
                                     <Button onClick={() => setLinkShadowModalOpen(true)} >Link Shadow</Button>
@@ -228,8 +228,8 @@ const debts = () => {
                                         <p className='ml-4 text-md font-bold'>Grund: {debt.description}</p>
                                     </div>
                                     <div className='flex flex-row items-end'>
-                                        <p className='text-2xl ml-auto' style={{ color: debt.remaining > 0 ? '#00c711' : '#ffff' }}>{debt.remaining > 0 ? "" : ""}{debt.remaining}{getCurrencySymbol(debt.currency)}</p>
-                                        <p className='text-md text-red-500 ml-1' style={{ color: debt.remaining > 0 ? '#00c711' : '#fff' }}>({debt.amount}{getCurrencySymbol(debt.currency)})</p>
+                                        <p className='text-2xl ml-auto' style={{ color: debt.remaining > 0 ? '#00c711' : '#ffff' }}>{debt.remaining > 0 ? "" : ""}{debt.remaining.toFixed(2)}{getCurrencySymbol(debt.currency)}</p>
+                                        <p className='text-md text-red-500 ml-1' style={{ color: debt.remaining > 0 ? '#00c711' : '#fff' }}>({debt.amount.toFixed(2)}{getCurrencySymbol(debt.currency)})</p>
                                     </div>
                                 </div>
                             ))}

@@ -71,6 +71,22 @@ export interface BalanceResponse {
     youOweThem: number;
 }
 
+export interface DashboardSummary {
+    totalBalance: number;
+    youOweTotal: number;
+    youGetTotal: number;
+    youOweCount: number;
+    youGetCount: number;
+}
+
+export interface ContactBalance {
+    _id: string;
+    username: string;
+    balance: number;
+    youOweThem: number;
+    theyOweYou: number;
+}
+
 const API_URL = "http://localhost:3000"; // your express server
 
 async function apiFetch(
@@ -259,4 +275,14 @@ export async function linkShadowUser(shadowUserId: string, realUserId: string) {
 export async function getAnyoneById(id: string) {
     const res = await apiFetch("/users/anyone/" + id);
     return res.json() as Promise<ApiResponse<Contact>>;
+}
+
+export async function getDashboardSummary() {
+    const res = await apiFetch("/dashboard/summary");
+    return res.json() as Promise<ApiResponse<DashboardSummary>>;
+}
+
+export async function getDashboardContactBalances() {
+    const res = await apiFetch("/dashboard/contact-balances");
+    return res.json() as Promise<ApiResponse<ContactBalance[]>>;
 }
