@@ -65,6 +65,12 @@ export interface ShadowUser {
     connectedToUserId?: string | null;
 }
 
+export interface BalanceResponse {
+    balance: number;
+    theyOweYou: number;
+    youOweThem: number;
+}
+
 const API_URL = "http://localhost:3000"; // your express server
 
 async function apiFetch(
@@ -161,6 +167,11 @@ export async function getUserDebts(userID: string) {
     return res.json() as Promise<ApiResponse<Debt[]>>;
 }
 
+export async function getDebtsIOwe(userID: string) {
+    const res = await apiFetch(`/debts/owedto/${userID}`);
+    return res.json() as Promise<ApiResponse<Debt[]>>;
+}
+
 export async function editDebt(data: Debt) {
     const res = await apiFetch(`/debts/edit/${data._id}`, {
         method: "POST",
@@ -206,6 +217,11 @@ export async function paySpecific(data: {
 export async function getAmountOwed(userID: string) {
     const res = await apiFetch(`/debts/owedby/${userID}`);
 
+    return res.json() as Promise<ApiResponse<BalanceResponse>>;
+}
+
+export async function getBalance(userID: string) {
+    const res = await apiFetch(`/debts/balance/${userID}`);
     return res.json() as Promise<ApiResponse<BalanceResponse>>;
 }
 

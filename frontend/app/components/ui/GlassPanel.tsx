@@ -12,6 +12,7 @@ export function GlassPanel({ children }: Props) {
       rounded-2xl
       shadow-xl
       p-6
+      overflow-y-auto
       "
         >
             {children}

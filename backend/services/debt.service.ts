@@ -23,4 +23,20 @@ export class DebtService {
             })
         );
     }
+
+    async getDebtsYouOweToUser(currentUserId: string, otherUserId: string) {
+        const debts = await this.debtRepo.findDebtsBetweenUsers(otherUserId, currentUserId);
+
+        return Promise.all(
+            debts.map(async (debt) => {
+                const paid = await this.paymentRepo.getPaidAmountForDebt(debt._id!.toString());
+
+                return {
+                    ...debt,
+                    paid,
+                    remaining: debt.amount - paid
+                };
+            })
+        );
+    }
 }

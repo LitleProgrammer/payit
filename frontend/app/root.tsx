@@ -45,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AuthProvider>
-      <div className="w-screen h-svh overflow-hidden">
+      <div className="w-screen h-svh overflow-x-hidden">
         <Outlet />
       </div>
     </AuthProvider>
