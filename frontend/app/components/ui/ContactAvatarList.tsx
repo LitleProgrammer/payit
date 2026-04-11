@@ -8,8 +8,11 @@ interface Props {
 }
 
 type Contact = {
-    _id: string;
-    username: string;
+    _id: string
+    username: string
+    balance: number
+    theyOweYou: number
+    youOweThem: number
 };
 
 export function ContactAvatarList({
@@ -52,6 +55,7 @@ export function ContactAvatarList({
                         {/* Avatar wrapper */}
                         <div
                             className={`
+                                relative
                                 p-[3px] rounded-full transition
                                 ${isSelected
                                     ? "border-2 border-blue-400 shadow-md shadow-blue-500/30"
@@ -61,6 +65,9 @@ export function ContactAvatarList({
                         >
                             <div className="w-24 h-24">
                                 <Avatar username={contact.username} size={24} fontSize={"text-4xl"} />
+                            </div>
+                            <div className="absolute bottom-0 right-0">
+                                <p className="text-sm bg-green-100 rounded-full w-fit px-1 py-0.5" style={{ backgroundColor: contact.balance > 0 ? "#DEFFE0" : "#FFBFBF", color: contact.balance > 0 ? "#02B80D" : "#B80202" }}>{contact.balance > 0 ? "+" : "-"}{Math.abs(contact.balance).toFixed(2)}€</p>
                             </div>
                         </div>
 

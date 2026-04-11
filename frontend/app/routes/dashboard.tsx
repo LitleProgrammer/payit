@@ -9,12 +9,15 @@ import { GlassPanel } from '~/components/ui/GlassPanel';
 import { Input } from '~/components/ui/Input';
 import { Modal } from '~/components/ui/Modal';
 import ProtectedRoute from '~/components/ui/ProtectedRoute'
-import { createShadowUser, getShadowUsers, createDebt, getUserConnections } from '~/lib/api';
+import { createShadowUser, createDebt, getDashboardContactBalances, getDashboardSummary } from '~/lib/api';
 import { useNavigate } from 'react-router';
 
 export interface Contact {
     _id: string
     username: string
+    balance: number
+    theyOweYou: number
+    youOweThem: number
 }
 
 type Currency = "EUR" | "USD" | "GBP" | "CHF";
@@ -34,8 +37,18 @@ export interface CreateDebtResponse {
     updatedDebts: Debt[];
 }
 
+export interface DashboardSummary {
+    totalBalance: number;
+    youOweTotal: number;
+    youGetTotal: number;
+    youOweCount: number;
+    youGetCount: number;
+}
+
 export default function Dashboard() {
     const navigate = useNavigate();
+
+    const [summary, setSummary] = useState<DashboardSummary | null>(null);
 
     const [selectUserModalOpen, setSelectUserModalOpen] = useState(false);
     const [createDebtModalOpen, setCreateDebtModalOpen] = useState(false);
@@ -49,32 +62,14 @@ export default function Dashboard() {
     const [debtDescription, setDebtDescription] = useState<string | null>(null);
 
     useEffect(() => {
-        async function fetchContacts() {
-            const res = await getShadowUsers();
-
-            if (res.data) {
-                setContacts(res.data);
-            }
-
-            const userRes = await getUserConnections();
-            if (userRes.data) {
-                setContacts(prev => [...prev, ...(userRes.data ?? [])]);
-            }
-        }
-
-        fetchContacts();
+        reloadDashboardData();
     }, []);
 
     async function handleCreateShadowUser() {
         if (shadowUserName) {
             const createRes = await createShadowUser(shadowUserName);
             if (createRes.data && createRes.data.updatedShadowUsers) {
-                setContacts(createRes.data.updatedShadowUsers);
-
-                const userRes = await getUserConnections();
-                if (userRes.data) {
-                    setContacts(prev => [...prev, ...(userRes.data ?? [])]);
-                }
+                await reloadDashboardData();
             }
         }
     }
@@ -106,6 +101,7 @@ export default function Dashboard() {
             }
 
             if (res.data) {
+                await reloadDashboardData();
                 //setDebts(res.data.updatedDebts);
 
                 // optional: reset form
@@ -119,14 +115,43 @@ export default function Dashboard() {
         }
     }
 
+    async function reloadDashboardData() {
+        const contactRes = await getDashboardContactBalances();
+        if (contactRes.data) {
+            setContacts(contactRes.data);
+        }
+
+        const summaryRes = await getDashboardSummary();
+        if (summaryRes.data) {
+            setSummary(summaryRes.data);
+        }
+    }
+
     return (
         <ProtectedRoute>
             <div className='w-full h-full flex flex-col items-center'>
                 <div className='-amber-600 h-11/12 w-full'>
+                    <div className='p-3'>
+                        <GlassPanel>
+                            <div className='w-full flex flex-row items-start justify-between'>
+                                <div className='flex flex-row items-end space-x-2'>
+                                    <h2 className='font-bold text-2xl'>Gesamt: </h2>
+                                    <p className={`font-bold text-4xl ${(summary?.totalBalance ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                                        {(summary?.totalBalance ?? 0) > 0 ? "+" : ""}
+                                        {Math.abs(summary?.totalBalance ?? 0).toFixed(2)}€
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className='text-green-500'>+{(summary?.youGetTotal ?? 0).toFixed(2)}€ von {summary?.youGetCount ?? 0} Person{(summary?.youGetCount ?? 0) === 1 ? "" : "en"}</p>
+                                    <p className='text-red-500'>-{(summary?.youOweTotal ?? 0).toFixed(2)}€ an {summary?.youOweCount ?? 0} Person{(summary?.youOweCount ?? 0) === 1 ? "" : "en"}</p>
+                                </div>
+                            </div>
+                        </GlassPanel>
+                    </div>
                     <div className='h-2/6 p-3'>
                         <GlassPanel>
                             <p className='text-right mb-1 hover:underline transition-all duration-700 hover:cursor-pointer' onClick={() => navigate("/contacts")}>Alle Kontakte →</p>
-                            <ContactAvatarList contacts={contacts.slice(0, 8)} />
+                            <ContactAvatarList contacts={contacts} />
                         </GlassPanel>
                     </div>
                 </div>
